@@ -1,3 +1,4 @@
+
 <!-- MODO LISTAGEM -->
 <div class="view-container" *ngIf="!modoFormulario">
 
@@ -39,6 +40,7 @@
         type="text"
         class="search-input"
         [(ngModel)]="termoBuscaEmprestimo"
+        (ngModelChange)="atualizarPesquisa()"
         placeholder="Pesquisar por nome, e-mail, livro ou ID..."
       />
 
@@ -113,7 +115,7 @@
 
         <tbody>
 
-          <tr *ngFor="let emp of emprestimosFiltrados">
+          <tr *ngFor="let emp of emprestimosPaginados">
 
             <td class="col-id">
               {{ emp.id }}
@@ -200,7 +202,7 @@
 
     </div>
 
-    <!-- RODAPÉ -->
+    <!-- RODAPÉ E PAGINAÇÃO -->
     <div class="table-footer">
 
       <div class="footer-info">
@@ -217,9 +219,44 @@
         </svg>
 
         <span>
-          Mostrando {{ emprestimosFiltrados.length }}
-          de {{ totalTodos }} registros
+          Mostrando {{ primeiroItem }}–{{ ultimoItem }}
+          de {{ emprestimosFiltrados.length }} registros
         </span>
+
+      </div>
+
+      <div class="paginacao" *ngIf="totalPaginas > 1">
+
+        <button
+          type="button"
+          class="pagina-btn"
+          (click)="irParaPagina(paginaAtual - 1)"
+          [disabled]="paginaAtual === 1">
+
+          Anterior
+
+        </button>
+
+        <button
+          type="button"
+          class="pagina-btn"
+          *ngFor="let pagina of paginas"
+          (click)="irParaPagina(pagina)"
+          [class.ativa]="paginaAtual === pagina">
+
+          {{ pagina }}
+
+        </button>
+
+        <button
+          type="button"
+          class="pagina-btn"
+          (click)="irParaPagina(paginaAtual + 1)"
+          [disabled]="paginaAtual === totalPaginas">
+
+          Próxima
+
+        </button>
 
       </div>
 
@@ -279,7 +316,6 @@
 
     </div>
 
-
     <!-- ETAPA 1 -->
     <div *ngIf="etapaAtual === 1" class="form-step">
 
@@ -333,7 +369,6 @@
       </div>
 
     </div>
-
 
     <!-- ETAPA 2 -->
     <div *ngIf="etapaAtual === 2" class="form-step">
@@ -389,7 +424,6 @@
 
     </div>
 
-
     <!-- ETAPA 3 -->
     <div *ngIf="etapaAtual === 3" class="form-step">
 
@@ -435,7 +469,6 @@
       </div>
 
     </div>
-
 
     <!-- BOTÕES -->
     <div class="form-actions">

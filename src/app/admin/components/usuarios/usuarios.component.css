@@ -282,6 +282,8 @@ button {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
   padding: 16px 20px;
   background: #ffffff;
   border-top: 1px solid #edf1f7;
@@ -293,6 +295,46 @@ button {
   display: flex;
   align-items: center;
   gap: 9px;
+}
+
+/* PAGINAÇÃO */
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pagina-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #d5e0f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pagina-btn:hover:not(:disabled) {
+  background: #eff6ff;
+  border-color: #2563eb;
+  color: #2563eb;
+}
+
+.pagina-btn.ativa {
+  background: #0756d9;
+  border-color: #0756d9;
+  color: #ffffff;
+}
+
+.pagina-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* LISTA VAZIA */
@@ -383,6 +425,39 @@ button {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
+/* CAMPOS COM ERRO */
+.form-group input.input-erro {
+  border-color: #dc2626;
+  background: #fffafa;
+}
+
+.form-group input.input-erro:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.10);
+}
+
+/* MENSAGENS DE ERRO */
+.mensagem-erro {
+  display: block;
+  color: #dc2626;
+  font-size: 0.78rem;
+  font-weight: 500;
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+/* ERRO GERAL DA API */
+.erro-geral {
+  padding: 12px 15px;
+  margin-top: 18px;
+  margin-bottom: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
 /* CAMPOS LADO A LADO */
 .form-row {
   display: flex;
@@ -468,6 +543,11 @@ button {
     align-items: flex-start;
   }
 
+  .paginacao {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .wizard-card {
     padding: 22px 18px;
   }
@@ -502,5 +582,12 @@ button {
 
   .form-actions button {
     width: 100%;
+  }
+
+  .pagina-btn {
+    min-width: 32px;
+    height: 34px;
+    padding: 0 8px;
+    font-size: 0.78rem;
   }
 }

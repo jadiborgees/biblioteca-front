@@ -1,3 +1,4 @@
+
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -32,6 +33,10 @@ export class EmprestimosComponent implements OnInit {
 
   formEmprestimo: any = this.modelo();
 
+  // PAGINAÇÃO
+  itensPorPagina = 6;
+  paginaAtual = 1;
+
   constructor(
     private api: ApiService,
     @Inject(PLATFORM_ID) private platformId: Object
@@ -60,13 +65,18 @@ export class EmprestimosComponent implements OnInit {
     this.carregarDadosAuxiliares();
   }
 
+  // CARREGAR EMPRÉSTIMOS
   carregarEmprestimos(): void {
     this.api.getLista('emprestimos').subscribe({
-      next: d => this.emprestimos = d,
+      next: d => {
+        this.emprestimos = d;
+        this.ajustarPagina();
+      },
       error: e => this.erro(e)
     });
   }
 
+  // CARREGAR LIVROS E USUÁRIOS
   carregarDadosAuxiliares(): void {
     this.api.getLista('livros').subscribe({
       next: d => this.livros = d,
@@ -79,13 +89,14 @@ export class EmprestimosComponent implements OnInit {
     });
   }
 
-  // Verifica se o empréstimo está atrasado
+  // VERIFICAR ATRASO
   estaAtrasado(emp: any): boolean {
     if (emp.status !== 'ATIVO') {
       return false;
     }
 
-    const dataPrevista = emp.dataDevolucaoPrevista || emp.dataDevolucao;
+    const dataPrevista =
+      emp.dataDevolucaoPrevista || emp.dataDevolucao;
 
     if (!dataPrevista) {
       return false;
@@ -94,7 +105,7 @@ export class EmprestimosComponent implements OnInit {
     return dataPrevista.substring(0, 10) < this.dataAtual();
   }
 
-  // Retorna o status que será exibido na tabela
+  // OBTER STATUS
   obterStatus(emp: any): string {
     if (this.estaAtrasado(emp)) {
       return 'ATRASADO';
@@ -103,7 +114,7 @@ export class EmprestimosComponent implements OnInit {
     return emp.status || 'ATIVO';
   }
 
-  // Quantidades dos filtros
+  // QUANTIDADES DOS FILTROS
   get totalTodos(): number {
     return this.emprestimos.length;
   }
@@ -126,7 +137,7 @@ export class EmprestimosComponent implements OnInit {
     ).length;
   }
 
-  // Pesquisa e filtros
+  // PESQUISA E FILTROS
   get emprestimosFiltrados(): any[] {
     const q = this.termoBuscaEmprestimo.trim().toLowerCase();
 
@@ -152,10 +163,69 @@ export class EmprestimosComponent implements OnInit {
     });
   }
 
-  selecionarFiltro(status: string): void {
-    this.filtroStatus = status;
+  // PAGINAÇÃO
+  get emprestimosPaginados(): any[] {
+    const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+
+    return this.emprestimosFiltrados.slice(
+      inicio,
+      inicio + this.itensPorPagina
+    );
   }
 
+  get totalPaginas(): number {
+    return Math.ceil(
+      this.emprestimosFiltrados.length / this.itensPorPagina
+    );
+  }
+
+  get paginas(): number[] {
+    return Array.from(
+      { length: this.totalPaginas },
+      (_, i) => i + 1
+    );
+  }
+
+  get primeiroItem(): number {
+    return this.emprestimosFiltrados.length === 0
+      ? 0
+      : (this.paginaAtual - 1) * this.itensPorPagina + 1;
+  }
+
+  get ultimoItem(): number {
+    return Math.min(
+      this.paginaAtual * this.itensPorPagina,
+      this.emprestimosFiltrados.length
+    );
+  }
+
+  irParaPagina(pagina: number): void {
+    if (pagina >= 1 && pagina <= this.totalPaginas) {
+      this.paginaAtual = pagina;
+    }
+  }
+
+  ajustarPagina(): void {
+    if (this.totalPaginas === 0) {
+      this.paginaAtual = 1;
+      return;
+    }
+
+    if (this.paginaAtual > this.totalPaginas) {
+      this.paginaAtual = this.totalPaginas;
+    }
+  }
+
+  atualizarPesquisa(): void {
+    this.paginaAtual = 1;
+  }
+
+  selecionarFiltro(status: string): void {
+    this.filtroStatus = status;
+    this.paginaAtual = 1;
+  }
+
+  // USUÁRIOS FILTRADOS
   get usuariosFiltrados(): any[] {
     const q = this.termoBuscaUsuario.trim().toLowerCase();
 
@@ -166,6 +236,7 @@ export class EmprestimosComponent implements OnInit {
     );
   }
 
+  // LIVROS FILTRADOS
   get livrosFiltrados(): any[] {
     const q = this.termoBuscaLivro.trim().toLowerCase();
 
@@ -176,16 +247,19 @@ export class EmprestimosComponent implements OnInit {
     );
   }
 
+  // SELECIONAR USUÁRIO
   selecionarUsuario(u: any): void {
     this.usuarioSelecionado = u;
     this.formEmprestimo.usuarioId = u.id;
   }
 
+  // SELECIONAR LIVRO
   selecionarLivro(l: any): void {
     this.livroSelecionado = l;
     this.formEmprestimo.livroId = l.id;
   }
 
+  // ABRIR NOVO EMPRÉSTIMO
   abrirNovoEmprestimo(): void {
     this.formEmprestimo = this.modelo();
 
@@ -200,11 +274,14 @@ export class EmprestimosComponent implements OnInit {
     this.livroSelecionado = null;
   }
 
+  // VOLTAR PARA LISTAGEM
   voltarParaLista(): void {
     this.modoFormulario = false;
     this.sucessoModal = false;
+    this.paginaAtual = 1;
   }
 
+  // VALIDAÇÕES
   validarEtapa1(): boolean {
     if (!this.formEmprestimo.usuarioId) {
       this.mostrarAlerta('Selecione um usuário cadastrado.');
@@ -240,6 +317,7 @@ export class EmprestimosComponent implements OnInit {
     return true;
   }
 
+  // PRÓXIMA ETAPA
   proximaEtapa(): void {
     if (this.etapaAtual === 1 && !this.validarEtapa1()) return;
     if (this.etapaAtual === 2 && !this.validarEtapa2()) return;
@@ -249,18 +327,21 @@ export class EmprestimosComponent implements OnInit {
     }
   }
 
+  // ETAPA ANTERIOR
   etapaAnterior(): void {
     if (this.etapaAtual > 1) {
       this.etapaAtual--;
     }
   }
 
+  // FINALIZAR EMPRÉSTIMO
   finalizarEmprestimo(): void {
     if (!this.validarEtapa3()) return;
 
     const payload = {
       dataEmprestimo: this.formEmprestimo.dataEmprestimo,
-      dataDevolucaoPrevista: this.formEmprestimo.dataDevolucaoPrevista,
+      dataDevolucaoPrevista:
+        this.formEmprestimo.dataDevolucaoPrevista,
       status: 'ATIVO',
 
       usuario: {
@@ -284,6 +365,7 @@ export class EmprestimosComponent implements OnInit {
     });
   }
 
+  // DEVOLVER LIVRO
   devolver(id: number): void {
     const confirmar = isPlatformBrowser(this.platformId)
       ? confirm('Confirmar a devolução deste livro?')
@@ -297,12 +379,14 @@ export class EmprestimosComponent implements OnInit {
     }
   }
 
+  // ALERTAS
   private mostrarAlerta(msg: string): void {
     if (isPlatformBrowser(this.platformId)) {
       alert(msg);
     }
   }
 
+  // TRATAMENTO DE ERROS
   private erro(e: any): void {
     console.error(e);
 

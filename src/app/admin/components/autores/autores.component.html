@@ -46,6 +46,7 @@
         type="text"
         class="search-input"
         [(ngModel)]="busca"
+        (ngModelChange)="atualizarPesquisa()"
         placeholder="Pesquisar por nome ou nacionalidade..."
       />
 
@@ -75,7 +76,7 @@
 
         <tbody>
 
-          <tr *ngFor="let a of filtrados">
+          <tr *ngFor="let a of autoresPaginados">
 
             <td class="col-id">
               {{ a.id }}
@@ -139,7 +140,7 @@
       </table>
     </div>
 
-    <!-- RODAPÉ -->
+    <!-- RODAPÉ E PAGINAÇÃO -->
     <div class="table-footer">
 
       <div class="footer-info">
@@ -154,10 +155,35 @@
         </svg>
 
         <span>
-          Mostrando {{ filtrados.length === 0 ? 0 : 1 }}
-          a {{ filtrados.length }}
+          Mostrando {{ primeiroItem }}–{{ ultimoItem }}
           de {{ filtrados.length }} registros
         </span>
+
+      </div>
+
+      <div class="paginacao" *ngIf="totalPaginas > 1">
+
+        <button
+          class="pagina-btn"
+          [disabled]="paginaAtual === 1"
+          (click)="irParaPagina(paginaAtual - 1)">
+          Anterior
+        </button>
+
+        <button
+          *ngFor="let pagina of paginas"
+          class="pagina-btn"
+          [class.ativa]="paginaAtual === pagina"
+          (click)="irParaPagina(pagina)">
+          {{ pagina }}
+        </button>
+
+        <button
+          class="pagina-btn"
+          [disabled]="paginaAtual === totalPaginas"
+          (click)="irParaPagina(paginaAtual + 1)">
+          Próxima
+        </button>
 
       </div>
 
@@ -206,7 +232,9 @@
     <div class="form-step">
 
       <div class="form-group">
-        <label for="nome">Nome completo <span>*</span></label>
+        <label for="nome">
+          Nome completo <span>*</span>
+        </label>
 
         <input
           id="nome"
@@ -233,14 +261,11 @@
         <button
           class="btn-secondary"
           (click)="formVisivel = false">
-
           Cancelar
         </button>
 
         <button class="btn-success" (click)="salvar()">
-
           {{ edicao ? 'Salvar Alterações' : 'Concluir Cadastro' }}
-
         </button>
 
       </div>

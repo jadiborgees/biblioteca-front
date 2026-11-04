@@ -1,127 +1,62 @@
-import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
-import { isPlatformBrowser } from '@angular/common';
-import { Observable, of } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, map } from 'rxjs';
+
+// Endereço da API Spring Boot (IntelliJ) e chave de desenvolvimento (nível ADMIN).
+// A chave abaixo é criada pelo LoadDatabase do back a cada execução.
+const API_URL = 'http://localhost:8080';
+const API_KEY = 'bib-chave-demo-12345';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private isBrowser: boolean;
+  private headers = new HttpHeaders({ 'X-API-Key': API_KEY });
 
-  // Base de dados inicial simulada (Mock)
-  private mockData: Record<string, any[]> = {
-    livro: [
-      { id: 1, titulo: 'Dom Casmurro', isbn: '978-8535902778', anoPublicacao: 1899, autores: [{ id: 1, nome: 'Machado de Assis' }] },
-      { id: 2, titulo: 'O Cortiço', isbn: '978-8508041534', anoPublicacao: 1890, autores: [{ id: 2, nome: 'Aluísio Azevedo' }] },
-      { id: 3, titulo: 'Memórias Póstumas de Brás Cubas', isbn: '978-8535914047', anoPublicacao: 1881, autores: [{ id: 1, nome: 'Machado de Assis' }] }
-    ],
-    autor: [
-      { id: 1, nome: 'Machado de Assis', nacionalidade: 'Brasileira' },
-      { id: 2, nome: 'Aluísio Azevedo', nacionalidade: 'Brasileira' }
-    ],
-    usuario: [
-      { id: 1, nome: 'João Silva', email: 'joao@email.com', telefone: '11999998888', dataNascimento: '1995-05-10', endereco: { logradouro: 'Rua das Flores', numero: '123', bairro: 'Centro', cidade: 'São Paulo', estado: 'SP', cep: '01001-000' } },
-      { id: 2, nome: 'Maria Santos', email: 'maria@email.com', telefone: '11977776666', dataNascimento: '1998-11-20', endereco: { logradouro: 'Av. Paulista', numero: '1000', bairro: 'Bela Vista', cidade: 'São Paulo', estado: 'SP', cep: '01310-100' } }
-    ],
-    emprestimo: [
-      { id: 1, usuario: { id: 1, nome: 'João Silva', email: 'joao@email.com' }, livro: { id: 1, titulo: 'Dom Casmurro' }, dataEmprestimo: '2026-11-01', dataDevolucaoPrevista: '2026-11-15', status: 'ATIVO' }
-    ]
-  };
+  constructor(private http: HttpClient) {}
 
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
-    this.isBrowser = isPlatformBrowser(this.platformId);
-    this.carregarDoLocalStorage();
+  private url(endpoint: string, id?: number, sufixo = ''): string {
+    const base = `${API_URL}/${endpoint.toLowerCase()}`;
+    return id === undefined ? base : `${base}/${id}${sufixo}`;
   }
 
-  private normalizarEndpoint(endpoint: string): string {
-    const mapa: Record<string, string> = {
-      'livros': 'livro',
-      'autores': 'autor',
-      'usuarios': 'usuario',
-      'emprestimos': 'emprestimo',
-      'enderecos': 'endereco'
-    };
-    return mapa[endpoint.toLowerCase()] || endpoint.toLowerCase();
-  }
-
-  private carregarDoLocalStorage(): void {
-    if (this.isBrowser) {
-      const salvas = localStorage.getItem('bib_mock_db');
-      if (salvas) {
-        try {
-          this.mockData = JSON.parse(salvas);
-        } catch (e) {
-          console.error('Erro ao ler do localStorage', e);
-        }
-      }
-    }
-  }
-
-  private guardarNoLocalStorage(): void {
-    if (this.isBrowser) {
-      localStorage.setItem('bib_mock_db', JSON.stringify(this.mockData));
-    }
+  // A API devolve listas paginadas no formato HATEOAS:
+  // { _embedded: { livroList: [...] }, page: { totalElements, ... } }
+  // Sem registros o campo _embedded nem aparece.
+  private extrairLista(resposta: any): any[] {
+    if (Array.isArray(resposta)) return resposta;
+    const embutido = resposta?._embedded;
+    return embutido ? (Object.values(embutido)[0] as any[]) ?? [] : [];
   }
 
   getLista(endpoint: string): Observable<any[]> {
-    const ep = this.normalizarEndpoint(endpoint);
-    const lista = this.mockData[ep] || [];
-    return of([...lista]);
+    // 100 é o máximo de itens por página permitido pelo back
+    return this.http
+      .get<any>(this.url(endpoint), { headers: this.headers, params: { size: 100 } })
+      .pipe(map(r => this.extrairLista(r)));
   }
 
   getTotal(endpoint: string): Observable<number> {
-    const ep = this.normalizarEndpoint(endpoint);
-    const lista = this.mockData[ep] || [];
-    return of(lista.length);
+    return this.http
+      .get<any>(this.url(endpoint), { headers: this.headers, params: { size: 1 } })
+      .pipe(map(r => r?.page?.totalElements ?? this.extrairLista(r).length));
   }
 
   getPorId(endpoint: string, id: number): Observable<any> {
-    const ep = this.normalizarEndpoint(endpoint);
-    const item = (this.mockData[ep] || []).find(i => i.id === Number(id));
-    return of(item ? { ...item } : null);
+    return this.http.get<any>(this.url(endpoint, Number(id)), { headers: this.headers });
   }
 
   postItem(endpoint: string, data: any): Observable<any> {
-    const ep = this.normalizarEndpoint(endpoint);
-    if (!this.mockData[ep]) this.mockData[ep] = [];
-    
-    const novoId = this.mockData[ep].length > 0 ? Math.max(...this.mockData[ep].map(i => i.id || 0)) + 1 : 1;
-    const novoItem = { ...data, id: novoId };
-    
-    this.mockData[ep].push(novoItem);
-    this.guardarNoLocalStorage();
-    return of(novoItem);
+    return this.http.post<any>(this.url(endpoint), data, { headers: this.headers });
   }
 
   putItem(endpoint: string, id: number, data: any): Observable<any> {
-    const ep = this.normalizarEndpoint(endpoint);
-    const index = (this.mockData[ep] || []).findIndex(i => i.id === Number(id));
-    if (index !== -1) {
-      this.mockData[ep][index] = { ...data, id: Number(id) };
-      this.guardarNoLocalStorage();
-      return of(this.mockData[ep][index]);
-    }
-    return of(data);
+    return this.http.put<any>(this.url(endpoint, Number(id)), data, { headers: this.headers });
   }
 
   patchItem(endpoint: string, id: number, sufixo = ''): Observable<any> {
-    const ep = this.normalizarEndpoint(endpoint);
-    const item = (this.mockData[ep] || []).find(i => i.id === Number(id));
-    if (item) {
-      if (sufixo === '/devolver') {
-        item.status = 'DEVOLVIDO';
-        item.dataDevolucao = new Date().toISOString().slice(0, 10);
-      }
-      this.guardarNoLocalStorage();
-      return of(item);
-    }
-    return of(null);
+    return this.http.patch<any>(this.url(endpoint, Number(id), sufixo), null, { headers: this.headers });
   }
 
   deleteItem(endpoint: string, id: number): Observable<any> {
-    const ep = this.normalizarEndpoint(endpoint);
-    if (this.mockData[ep]) {
-      this.mockData[ep] = this.mockData[ep].filter(i => i.id !== Number(id));
-      this.guardarNoLocalStorage();
-    }
-    return of(true);
+    return this.http.delete<any>(this.url(endpoint, Number(id)), { headers: this.headers });
   }
 }
