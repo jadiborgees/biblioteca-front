@@ -1,0 +1,509 @@
+<!-- MODO LISTAGEM -->
+<div class="view-container" *ngIf="!modoFormulario">
+
+  <!-- CABEÇALHO -->
+  <div class="page-title-flex">
+
+    <div class="title-icon-box">
+      <svg width="30" height="30" viewBox="0 0 24 24"
+        fill="none" stroke="#2563eb" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+    </div>
+
+    <div>
+      <h2>Gestão de Empréstimos</h2>
+      <p class="subtitle">
+        Lista de todos os empréstimos registrados no sistema.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- PESQUISA E FILTROS -->
+  <div class="top-bar-flex">
+
+    <div class="search-input-wrapper">
+
+      <svg class="search-icon" width="19" height="19"
+        viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2"
+        stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+
+      <input
+        type="text"
+        class="search-input"
+        [(ngModel)]="termoBuscaEmprestimo"
+        placeholder="Pesquisar por nome, e-mail, livro ou ID..."
+      />
+
+    </div>
+
+    <div class="filter-group">
+
+      <button
+        class="filter-btn"
+        [class.active]="filtroStatus === 'TODOS'"
+        (click)="selecionarFiltro('TODOS')">
+        Todos
+        <span>{{ totalTodos }}</span>
+      </button>
+
+      <button
+        class="filter-btn"
+        [class.active]="filtroStatus === 'ATIVO'"
+        (click)="selecionarFiltro('ATIVO')">
+        Ativos
+        <span>{{ totalAtivos }}</span>
+      </button>
+
+      <button
+        class="filter-btn"
+        [class.active]="filtroStatus === 'DEVOLVIDO'"
+        (click)="selecionarFiltro('DEVOLVIDO')">
+        Devolvidos
+        <span>{{ totalDevolvidos }}</span>
+      </button>
+
+      <button
+        class="filter-btn"
+        [class.active]="filtroStatus === 'ATRASADO'"
+        (click)="selecionarFiltro('ATRASADO')">
+        Atrasados
+        <span>{{ totalAtrasados }}</span>
+      </button>
+
+    </div>
+
+    <button
+      class="btn-novo-emprestimo"
+      (click)="abrirNovoEmprestimo()">
+
+      <span class="plus-sign">+</span>
+      Novo Empréstimo
+
+    </button>
+
+  </div>
+
+  <!-- TABELA -->
+  <div class="table-card">
+
+    <div class="table-responsive">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>USUÁRIO</th>
+            <th>E-MAIL</th>
+            <th>LIVRO</th>
+            <th>RETIRADA</th>
+            <th>DEVOLUÇÃO PREVISTA</th>
+            <th>STATUS</th>
+            <th>AÇÕES</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr *ngFor="let emp of emprestimosFiltrados">
+
+            <td class="col-id">
+              {{ emp.id }}
+            </td>
+
+            <td class="col-bold">
+              {{ emp.usuario?.nome || '—' }}
+            </td>
+
+            <td>
+              {{ emp.usuario?.email || '—' }}
+            </td>
+
+            <td>
+              {{ emp.livro?.titulo || emp.livro?.id || '—' }}
+            </td>
+
+            <td>
+              {{ emp.dataEmprestimo }}
+            </td>
+
+            <td>
+              {{ emp.dataDevolucaoPrevista || emp.dataDevolucao || '—' }}
+            </td>
+
+            <td>
+              <span
+                class="badge-status-pill"
+                [class.status-ativo]="obterStatus(emp) === 'ATIVO'"
+                [class.status-devolvido]="obterStatus(emp) === 'DEVOLVIDO'"
+                [class.status-atrasado]="obterStatus(emp) === 'ATRASADO'">
+
+                {{ obterStatus(emp) }}
+
+              </span>
+            </td>
+
+            <td class="actions-cell">
+
+              <button
+                *ngIf="emp.status !== 'DEVOLVIDO'"
+                class="btn-registrar-devolucao"
+                (click)="devolver(emp.id)">
+
+                <svg width="15" height="15"
+                  viewBox="0 0 24 24"
+                  fill="none" stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round">
+
+                  <path d="M20 11a8.1 8.1 0 0 0-15.5-2"></path>
+                  <path d="M4 4v5h5"></path>
+                  <path d="M4 13a8.1 8.1 0 0 0 15.5 2"></path>
+                  <path d="M20 20v-5h-5"></path>
+
+                </svg>
+
+                Registrar devolução
+
+              </button>
+
+              <span
+                *ngIf="emp.status === 'DEVOLVIDO'"
+                class="devolucao-concluida">
+
+                Devolvido
+
+              </span>
+
+            </td>
+
+          </tr>
+
+          <tr *ngIf="emprestimosFiltrados.length === 0">
+            <td colspan="8" class="empty-row">
+              Nenhum empréstimo encontrado.
+            </td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- RODAPÉ -->
+    <div class="table-footer">
+
+      <div class="footer-info">
+
+        <svg width="18" height="18"
+          viewBox="0 0 24 24"
+          fill="none" stroke="#64748b"
+          stroke-width="2">
+
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+
+        </svg>
+
+        <span>
+          Mostrando {{ emprestimosFiltrados.length }}
+          de {{ totalTodos }} registros
+        </span>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- MODO FORMULÁRIO -->
+<div class="view-container form-view" *ngIf="modoFormulario">
+
+  <div class="page-title-flex">
+
+    <div class="title-icon-box">
+      <svg width="30" height="30" viewBox="0 0 24 24"
+        fill="none" stroke="#2563eb" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+    </div>
+
+    <div>
+      <h2>Novo Empréstimo</h2>
+      <p class="subtitle">
+        Preencha as etapas para registrar um novo empréstimo.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="wizard-card">
+
+    <!-- ETAPAS -->
+    <div class="steps-container">
+
+      <div class="step-item" [class.step-active]="etapaAtual >= 1">
+        <div class="step-number">1</div>
+        <span>Selecionar usuário</span>
+      </div>
+
+      <div class="step-line" [class.line-active]="etapaAtual >= 2"></div>
+
+      <div class="step-item" [class.step-active]="etapaAtual >= 2">
+        <div class="step-number">2</div>
+        <span>Selecionar livro</span>
+      </div>
+
+      <div class="step-line" [class.line-active]="etapaAtual >= 3"></div>
+
+      <div class="step-item" [class.step-active]="etapaAtual >= 3">
+        <div class="step-number">3</div>
+        <span>Datas</span>
+      </div>
+
+    </div>
+
+
+    <!-- ETAPA 1 -->
+    <div *ngIf="etapaAtual === 1" class="form-step">
+
+      <h3>Selecionar usuário</h3>
+      <p class="form-description">
+        Pesquise e selecione o usuário que realizará o empréstimo.
+      </p>
+
+      <div class="search-input-wrapper form-search">
+
+        <svg class="search-icon" width="19" height="19"
+          viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="termoBuscaUsuario"
+          placeholder="Pesquisar usuário por nome ou e-mail..."
+        />
+
+      </div>
+
+      <div class="selection-list">
+
+        <button
+          type="button"
+          class="selection-item"
+          *ngFor="let usuario of usuariosFiltrados"
+          [class.selected]="usuarioSelecionado?.id === usuario.id"
+          (click)="selecionarUsuario(usuario)">
+
+          <div class="selection-info">
+            <strong>{{ usuario.nome }}</strong>
+            <span>{{ usuario.email }}</span>
+          </div>
+
+          <span class="selection-check">
+            {{ usuarioSelecionado?.id === usuario.id ? 'Selecionado' : 'Selecionar' }}
+          </span>
+
+        </button>
+
+        <div class="empty-selection" *ngIf="usuariosFiltrados.length === 0">
+          Nenhum usuário encontrado.
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ETAPA 2 -->
+    <div *ngIf="etapaAtual === 2" class="form-step">
+
+      <h3>Selecionar livro</h3>
+      <p class="form-description">
+        Escolha o livro que será emprestado.
+      </p>
+
+      <div class="search-input-wrapper form-search">
+
+        <svg class="search-icon" width="19" height="19"
+          viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="termoBuscaLivro"
+          placeholder="Pesquisar livro por título, ISBN ou ID..."
+        />
+
+      </div>
+
+      <div class="selection-list">
+
+        <button
+          type="button"
+          class="selection-item"
+          *ngFor="let livro of livrosFiltrados"
+          [class.selected]="livroSelecionado?.id === livro.id"
+          (click)="selecionarLivro(livro)">
+
+          <div class="selection-info">
+            <strong>{{ livro.titulo }}</strong>
+            <span>ISBN: {{ livro.isbn || 'Não informado' }}</span>
+          </div>
+
+          <span class="selection-check">
+            {{ livroSelecionado?.id === livro.id ? 'Selecionado' : 'Selecionar' }}
+          </span>
+
+        </button>
+
+        <div class="empty-selection" *ngIf="livrosFiltrados.length === 0">
+          Nenhum livro encontrado.
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- ETAPA 3 -->
+    <div *ngIf="etapaAtual === 3" class="form-step">
+
+      <h3>Definir datas</h3>
+      <p class="form-description">
+        Informe a data de retirada e a previsão de devolução.
+      </p>
+
+      <div class="selected-summary">
+
+        <div>
+          <span>Usuário selecionado</span>
+          <strong>{{ usuarioSelecionado?.nome }}</strong>
+        </div>
+
+        <div>
+          <span>Livro selecionado</span>
+          <strong>{{ livroSelecionado?.titulo }}</strong>
+        </div>
+
+      </div>
+
+      <div class="date-fields">
+
+        <div class="form-group">
+          <label>Data de retirada</label>
+
+          <input
+            type="date"
+            [(ngModel)]="formEmprestimo.dataEmprestimo"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Devolução prevista</label>
+
+          <input
+            type="date"
+            [(ngModel)]="formEmprestimo.dataDevolucaoPrevista"
+          />
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- BOTÕES -->
+    <div class="form-actions">
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="etapaAtual === 1 ? voltarParaLista() : etapaAnterior()">
+
+        {{ etapaAtual === 1 ? 'Cancelar' : 'Voltar' }}
+
+      </button>
+
+      <button
+        *ngIf="etapaAtual < 3"
+        type="button"
+        class="btn-primary"
+        (click)="proximaEtapa()">
+
+        Próxima etapa
+
+      </button>
+
+      <button
+        *ngIf="etapaAtual === 3"
+        type="button"
+        class="btn-primary"
+        (click)="finalizarEmprestimo()">
+
+        Finalizar empréstimo
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- MODAL DE SUCESSO -->
+<div class="modal-overlay" *ngIf="sucessoModal">
+
+  <div class="success-modal">
+
+    <div class="success-icon">
+      <svg width="34" height="34" viewBox="0 0 24 24"
+        fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6L9 17l-5-5"></path>
+      </svg>
+    </div>
+
+    <h2>Empréstimo realizado!</h2>
+
+    <p>
+      O empréstimo foi registrado com sucesso no sistema.
+    </p>
+
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="voltarParaLista()">
+
+      Voltar para empréstimos
+
+    </button>
+
+  </div>
+
+</div>

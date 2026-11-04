@@ -1,0 +1,128 @@
+
+<div class="view-container">
+
+  <!-- CABEÇALHO -->
+  <div class="header-flex">
+
+    <div class="page-title-flex">
+
+      <div class="title-icon-box">
+        <svg width="30" height="30" viewBox="0 0 24 24"
+          fill="none" stroke="#2563eb" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+
+        </svg>
+      </div>
+
+      <div>
+        <h2>Painel Administrativo</h2>
+        <p class="subtitle">
+          Resumo geral do sistema da biblioteca em tempo real.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- CARDS DE ESTATÍSTICAS -->
+  <div class="stats-grid">
+
+    <!-- LIVROS -->
+    <div class="stat-card border-blue">
+
+      <div class="stat-content">
+        <span class="stat-title">Livros Cadastrados</span>
+        <span class="stat-value">{{ totalLivros }}</span>
+        <span class="stat-description">Total de livros no acervo</span>
+      </div>
+
+      <div class="stat-icon icon-blue">
+        <svg width="27" height="27" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+
+          <path d="M12 7v14"></path>
+          <path d="M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13"></path>
+          <path d="M3 18a2 2 0 0 0 2 2h3a4 4 0 0 1 4 4"></path>
+        </svg>
+      </div>
+
+    </div>
+
+    <!-- AUTORES -->
+    <div class="stat-card border-purple">
+
+      <div class="stat-content">
+        <span class="stat-title">Autores Registrados</span>
+        <span class="stat-value">{{ totalAutores }}</span>
+        <span class="stat-description">Autores no catálogo</span>
+      </div>
+
+      <div class="stat-icon icon-purple">
+        <svg width="27" height="27" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+
+          <circle cx="9" cy="8" r="4"></circle>
+          <path d="M3 21v-2a6 6 0 0 1 12 0v2"></path>
+          <path d="M16 4.5a4 4 0 0 1 0 7.5"></path>
+          <path d="M21 21v-2a6 6 0 0 0-4-5.65"></path>
+
+        </svg>
+      </div>
+
+    </div>
+
+    <!-- USUÁRIOS -->
+    <div class="stat-card border-green">
+
+      <div class="stat-content">
+        <span class="stat-title">Usuários Ativos</span>
+        <span class="stat-value">{{ totalUsuarios }}</span>
+        <span class="stat-description">Usuários cadastrados</span>
+      </div>
+
+      <div class="stat-icon icon-green">
+        <svg width="27" height="27" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+
+        </svg>
+      </div>
+
+    </div>
+
+    <!-- EMPRÉSTIMOS -->
+    <div class="stat-card border-amber">
+
+      <div class="stat-content">
+        <span class="stat-title">Empréstimos Atuais</span>
+        <span class="stat-value">{{ totalEmprestimos }}</span>
+        <span class="stat-description">Empréstimos registrados</span>
+      </div>
+
+      <div class="stat-icon icon-amber">
+        <svg width="27" height="27" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+
+          <path d="M17 3l4 4-4 4"></path>
+          <path d="M3 7h18"></path>
+          <path d="M7 21l-4-4 4-4"></path>
+          <path d="M21 17H3"></path>
+
+        </svg>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
