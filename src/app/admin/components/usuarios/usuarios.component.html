@@ -1,0 +1,106 @@
+<!-- MODO LISTAGEM -->
+<div class="view-container" *ngIf="!modoFormulario">
+  <div class="header-flex">
+    <div>
+      <h2>Gestão de Usuários</h2>
+      <p class="subtitle">Lista de todos os usuários registados no sistema.</p>
+    </div>
+    <button class="btn-primary btn-add" (click)="abrirNovo()">
+      <span class="plus-icon">+</span> Novo Usuário
+    </button>
+  </div>
+
+  <div class="search-bar-container">
+    <input 
+      type="text" 
+      class="search-input" 
+      [(ngModel)]="termoBusca" 
+      placeholder="Pesquisar por nome, CPF, e-mail ou telefone..." 
+    />
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Nome</th>
+        <th>E-mail</th>
+        <th>CPF</th>
+        <th>Telefone</th>
+        <th>Nascimento</th>
+        <th class="actions-header">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let u of usuariosFiltrados">
+        <td>{{ u.id }}</td>
+        <td>{{ u.nome }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ u.cpf }}</td>
+        <td>{{ u.telefone }}</td>
+        <td>{{ u.dataNascimento }}</td>
+        <td class="actions-cell">
+          <button class="btn-edit" (click)="abrirEdicao(u)">Editar</button>
+          <button class="btn-delete" (click)="excluirUsuario(u.id)">Excluir</button>
+        </td>
+      </tr>
+      <tr *ngIf="usuariosFiltrados.length === 0">
+        <td colspan="7" class="empty-row">Nenhum usuário encontrado.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MODO FORMULÁRIO (Cadastro / Edição) -->
+<div class="wizard-container" *ngIf="modoFormulario">
+  <div class="header-flex">
+    <div>
+      <h2>{{ isEdicao ? 'Editar Usuário' : 'Novo Usuário' }}</h2>
+      <p class="subtitle">Preencha as informações do usuário conforme o cadastro exigido.</p>
+    </div>
+    <button class="btn-secondary" (click)="voltarParaLista()">Voltar para a Lista</button>
+  </div>
+
+  <div class="wizard-card">
+    <div class="form-step">
+      <h3>Informações do Usuário</h3>
+      
+      <div class="form-group">
+        <label>Nome Completo *</label>
+        <input type="text" [(ngModel)]="formUsuario.nome" placeholder="Ex: Maria Silva" />
+      </div>
+
+      <div class="form-group">
+        <label>E-mail *</label>
+        <input type="email" [(ngModel)]="formUsuario.email" placeholder="exemplo@email.com" />
+      </div>
+
+      <div class="form-group">
+        <label>CPF *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="formUsuario.cpf" 
+          (input)="aplicarMascaraCpf()" 
+          placeholder="Ex: 111.111.111-11" 
+          maxlength="14" 
+        />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Telefone *</label>
+          <input type="text" [(ngModel)]="formUsuario.telefone" placeholder="Ex: 50 20804126" />
+        </div>
+        <div class="form-group">
+          <label>Data de Nascimento *</label>
+          <input type="date" [(ngModel)]="formUsuario.dataNascimento" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="voltarParaLista()">Cancelar</button>
+        <button class="btn-success" (click)="salvarUsuario()">{{ isEdicao ? 'Salvar Alterações' : 'Concluir Cadastro' }}</button>
+      </div>
+    </div>
+  </div>
+</div>

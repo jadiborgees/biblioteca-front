@@ -1,0 +1,225 @@
+<!-- MODO LISTAGEM -->
+<div class="view-container" *ngIf="!modoFormulario">
+  <div class="header-flex">
+    <div>
+      <h2>Gestão de Empréstimos</h2>
+      <p class="subtitle">Lista de todos os empréstimos registados no sistema.</p>
+    </div>
+    <button class="btn-primary btn-add" (click)="abrirNovoEmprestimo()">
+      <span class="plus-icon">+</span> Novo Empréstimo
+    </button>
+  </div>
+
+  <div class="search-bar-container">
+    <input 
+      type="text" 
+      class="search-input" 
+      [(ngModel)]="termoBuscaEmprestimo" 
+      placeholder="Pesquisar por nome, CPF, e-mail ou ID..." 
+    />
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Usuário</th>
+        <th>E-mail</th>
+        <th>Livro ID</th>
+        <th>Retirada</th>
+        <th>Devolução</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let emp of emprestimosFiltrados">
+        <td>{{ emp.id }}</td>
+        <td>{{ emp.nomeUsuario }}</td>
+        <td>{{ emp.emailUsuario }}</td>
+        <td>{{ emp.livroId }}</td>
+        <td>{{ emp.dataEmprestimo }}</td>
+        <td>{{ emp.dataDevolucao }}</td>
+      </tr>
+      <tr *ngIf="emprestimosFiltrados.length === 0">
+        <td colspan="6" class="empty-row">Nenhum empréstimo encontrado.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MODO FORMULÁRIO (Wizard em Etapas) -->
+<div class="wizard-container" *ngIf="modoFormulario">
+  <div class="header-flex">
+    <div>
+      <h2>Novo Empréstimo</h2>
+      <p class="subtitle">Siga as etapas para registar o usuário, endereço e o livro pretendido.</p>
+    </div>
+    <button class="btn-secondary" (click)="voltarParaLista()">Voltar para a Lista</button>
+  </div>
+
+  <div class="wizard-steps">
+    <div [class.active]="etapaAtual === 1" class="step">1. Usuário</div>
+    <div [class.active]="etapaAtual === 2" class="step">2. Endereço</div>
+    <div [class.active]="etapaAtual === 3" class="step">3. Livro</div>
+    <div [class.active]="etapaAtual === 4" class="step">4. Confirmação</div>
+  </div>
+
+  <div class="wizard-card">
+    <!-- ETAPA 1: Dados do Usuário -->
+    <div *ngIf="etapaAtual === 1" class="form-step">
+      <h3>Etapa 1: Informações do Usuário</h3>
+      
+      <!-- Seletor entre Usuário Existente ou Novo -->
+      <div class="form-group">
+        <label>Tipo de Cadastro</label>
+        <div class="radio-group">
+          <label class="radio-label">
+            <input type="radio" [(ngModel)]="tipoSelecaoUsuario" value="existente" /> Usuário Existente
+          </label>
+          <label class="radio-label">
+            <input type="radio" [(ngModel)]="tipoSelecaoUsuario" value="novo" /> Novo Usuário
+          </label>
+        </div>
+      </div>
+
+      <!-- Buscar Usuário Existente -->
+      <div class="form-group search-box-container" *ngIf="tipoSelecaoUsuario === 'existente'">
+        <label>Pesquisar Usuário (Nome ou CPF) *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="termoBuscaUsuario" 
+          placeholder="Digite o nome ou CPF do usuário..." 
+        />
+        <div class="suggestions-list" *ngIf="termoBuscaUsuario && usuariosFiltrados.length > 0">
+          <div 
+            *ngFor="let u of usuariosFiltrados" 
+            class="suggestion-item"
+            (click)="selecionarUsuarioExistente(u)"
+          >
+            <strong>{{ u.nome }}</strong> 
+            <span>(CPF: {{ u.cpf }} | E-mail: {{ u.email }})</span>
+          </div>
+        </div>
+        <div class="no-suggestions" *ngIf="termoBuscaUsuario && usuariosFiltrados.length === 0">
+          Nenhum usuário encontrado.
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Nome Completo *</label>
+        <input type="text" [(ngModel)]="formEmprestimo.nomeUsuario" [disabled]="tipoSelecaoUsuario === 'existente'" placeholder="Ex: Maria Silva" />
+      </div>
+
+      <div class="form-group">
+        <label>E-mail *</label>
+        <input type="email" [(ngModel)]="formEmprestimo.emailUsuario" [disabled]="tipoSelecaoUsuario === 'existente'" placeholder="exemplo@email.com" />
+      </div>
+
+      <div class="form-group">
+        <label>CPF *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="formEmprestimo.cpfUsuario" 
+          (input)="aplicarMascaraCpf()" 
+          [disabled]="tipoSelecaoUsuario === 'existente'"
+          placeholder="Ex: 111.111.111-11" 
+          maxlength="14" 
+        />
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-primary" (click)="proximaEtapa()">Avançar</button>
+      </div>
+    </div>
+
+    <!-- ETAPA 2: Endereço -->
+    <div *ngIf="etapaAtual === 2" class="form-step">
+      <h3>Etapa 2: Endereço Residencial</h3>
+
+      <div class="form-group">
+        <label>CEP *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="formEmprestimo.cep" 
+          (input)="aplicarMascaraCep()" 
+          placeholder="Ex: 00000-000" 
+          maxlength="9" 
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Logradouro / Rua *</label>
+        <input type="text" [(ngModel)]="formEmprestimo.logradouro" placeholder="Preenchimento automático" />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Número *</label>
+          <input type="text" [(ngModel)]="formEmprestimo.numero" placeholder="123" />
+        </div>
+        <div class="form-group">
+          <label>Cidade *</label>
+          <input type="text" [(ngModel)]="formEmprestimo.cidade" placeholder="Preenchimento automático" />
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="etapaAnterior()">Voltar</button>
+        <button class="btn-primary" (click)="proximaEtapa()">Avançar</button>
+      </div>
+    </div>
+
+    <!-- ETAPA 3: Escolha do Livro -->
+    <div *ngIf="etapaAtual === 3" class="form-step">
+      <h3>Etapa 3: Seleção do Livro</h3>
+
+      <div class="form-group search-box-container">
+        <label>Pesquisar Livro (Nome, ID ou ISBN) *</label>
+        <input 
+          type="text" 
+          [(ngModel)]="termoBuscaLivro" 
+          placeholder="Digite o título, ID ou ISBN..." 
+        />
+        
+        <div class="suggestions-list" *ngIf="termoBuscaLivro && livrosFiltrados.length > 0">
+          <div 
+            *ngFor="let livro of livrosFiltrados" 
+            class="suggestion-item"
+            (click)="selecionarLivro(livro)"
+          >
+            <strong>{{ livro.titulo }}</strong> 
+            <span>(ID: {{ livro.id }} | ISBN: {{ livro.isbn || 'N/A' }})</span>
+          </div>
+        </div>
+
+        <div class="no-suggestions" *ngIf="termoBuscaLivro && livrosFiltrados.length === 0">
+          Nenhum livro encontrado com este termo.
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="etapaAnterior()">Voltar</button>
+        <button class="btn-primary" (click)="proximaEtapa()">Avançar</button>
+      </div>
+    </div>
+
+    <!-- ETAPA 4: Datas e Finalização -->
+    <div *ngIf="etapaAtual === 4" class="form-step">
+      <h3>Etapa 4: Período do Empréstimo</h3>
+
+      <div class="form-group">
+        <label>Data de Retirada *</label>
+        <input type="date" [(ngModel)]="formEmprestimo.dataEmprestimo" />
+      </div>
+
+      <div class="form-group">
+        <label>Data Prevista para Devolução *</label>
+        <input type="date" [(ngModel)]="formEmprestimo.dataDevolucao" />
+      </div>
+
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="etapaAnterior()">Voltar</button>
+        <button class="btn-success" (click)="finalizarEmprestimo()">Concluir Empréstimo</button>
+      </div>
+    </div>
+  </div>
+</div>

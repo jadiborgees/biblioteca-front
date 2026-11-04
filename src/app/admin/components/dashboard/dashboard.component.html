@@ -1,0 +1,30 @@
+<div class="view-container">
+  <div class="header-flex">
+    <div>
+      <h2>Painel Administrativo</h2>
+      <p class="subtitle">Resumo geral do sistema da biblioteca em tempo real.</p>
+    </div>
+  </div>
+
+  <div class="stats-grid">
+    <div class="stat-card border-blue">
+      <span class="stat-title">Livros Cadastrados</span>
+      <span class="stat-value">{{ totalLivros }}</span>
+    </div>
+
+    <div class="stat-card border-purple">
+      <span class="stat-title">Autores Registados</span>
+      <span class="stat-value">{{ totalAutores }}</span>
+    </div>
+
+    <div class="stat-card border-green">
+      <span class="stat-title">Usuários Ativos</span>
+      <span class="stat-value">{{ totalUsuarios }}</span>
+    </div>
+
+    <div class="stat-card border-amber">
+      <span class="stat-title">Empréstimos Atuais</span>
+      <span class="stat-value">{{ totalEmprestimos }}</span>
+    </div>
+  </div>
+</div>
