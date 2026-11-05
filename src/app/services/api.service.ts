@@ -1,19 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-// Lê as variáveis de ambiente na Vercel ou usa os valores de fallback em localhost
+// Aponta diretamente para a API no Render
 const API_URL = (typeof process !== 'undefined' && process.env['API_URL']) 
   || (typeof process !== 'undefined' && process.env['NG_APP_API_URL']) 
-  || 'http://localhost:8080';
-
-const API_KEY = (typeof process !== 'undefined' && process.env['API_KEY']) 
-  || (typeof process !== 'undefined' && process.env['NG_APP_API_KEY']) 
-  || 'bib-chave-demo-12345';
+  || 'https://biblioteca-api-10lf.onrender.com';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
-  private headers = new HttpHeaders({ 'X-API-Key': API_KEY });
 
   constructor(private http: HttpClient) {}
 
@@ -34,33 +29,33 @@ export class ApiService {
   getLista(endpoint: string): Observable<any[]> {
     // 100 é o máximo de itens por página permitido pelo back
     return this.http
-      .get<any>(this.url(endpoint), { headers: this.headers, params: { size: 100 } })
+      .get<any>(this.url(endpoint), { params: { size: 100 } })
       .pipe(map(r => this.extrairLista(r)));
   }
 
   getTotal(endpoint: string): Observable<number> {
     return this.http
-      .get<any>(this.url(endpoint), { headers: this.headers, params: { size: 1 } })
+      .get<any>(this.url(endpoint), { params: { size: 1 } })
       .pipe(map(r => r?.page?.totalElements ?? this.extrairLista(r).length));
   }
 
   getPorId(endpoint: string, id: number): Observable<any> {
-    return this.http.get<any>(this.url(endpoint, Number(id)), { headers: this.headers });
+    return this.http.get<any>(this.url(endpoint, Number(id)));
   }
 
   postItem(endpoint: string, data: any): Observable<any> {
-    return this.http.post<any>(this.url(endpoint), data, { headers: this.headers });
+    return this.http.post<any>(this.url(endpoint), data);
   }
 
   putItem(endpoint: string, id: number, data: any): Observable<any> {
-    return this.http.put<any>(this.url(endpoint, Number(id)), data, { headers: this.headers });
+    return this.http.put<any>(this.url(endpoint, Number(id)), data);
   }
 
   patchItem(endpoint: string, id: number, sufixo = ''): Observable<any> {
-    return this.http.patch<any>(this.url(endpoint, Number(id), sufixo), null, { headers: this.headers });
+    return this.http.patch<any>(this.url(endpoint, Number(id), sufixo), null);
   }
 
   deleteItem(endpoint: string, id: number): Observable<any> {
-    return this.http.delete<any>(this.url(endpoint, Number(id)), { headers: this.headers });
+    return this.http.delete<any>(this.url(endpoint, Number(id)));
   }
 }
