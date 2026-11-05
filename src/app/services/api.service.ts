@@ -2,10 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-// Endereço da API Spring Boot (IntelliJ) e chave de desenvolvimento (nível ADMIN).
-// A chave abaixo é criada pelo LoadDatabase do back a cada execução.
-const API_URL = 'http://localhost:8080';
-const API_KEY = 'bib-chave-demo-12345';
+// Lê as variáveis de ambiente na Vercel ou usa os valores de fallback em localhost
+const API_URL = (typeof process !== 'undefined' && process.env['API_URL']) 
+  || (typeof process !== 'undefined' && process.env['NG_APP_API_URL']) 
+  || 'http://localhost:8080';
+
+const API_KEY = (typeof process !== 'undefined' && process.env['API_KEY']) 
+  || (typeof process !== 'undefined' && process.env['NG_APP_API_KEY']) 
+  || 'bib-chave-demo-12345';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
