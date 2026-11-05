@@ -1,11 +1,10 @@
+
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-// Aponta diretamente para a API no Render
-const API_URL = (typeof process !== 'undefined' && process.env['API_URL']) 
-  || (typeof process !== 'undefined' && process.env['NG_APP_API_URL']) 
-  || 'https://biblioteca-api-10lf.onrender.com';
+// Mesmo endereço utilizado no AuthService
+const API_URL = 'https://biblioteca-api-10lf.onrender.com';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -17,17 +16,17 @@ export class ApiService {
     return id === undefined ? base : `${base}/${id}${sufixo}`;
   }
 
-  // A API devolve listas paginadas no formato HATEOAS:
-  // { _embedded: { livroList: [...] }, page: { totalElements, ... } }
-  // Sem registros o campo _embedded nem aparece.
   private extrairLista(resposta: any): any[] {
     if (Array.isArray(resposta)) return resposta;
+
     const embutido = resposta?._embedded;
-    return embutido ? (Object.values(embutido)[0] as any[]) ?? [] : [];
+
+    return embutido
+      ? (Object.values(embutido)[0] as any[]) ?? []
+      : [];
   }
 
   getLista(endpoint: string): Observable<any[]> {
-    // 100 é o máximo de itens por página permitido pelo back
     return this.http
       .get<any>(this.url(endpoint), { params: { size: 100 } })
       .pipe(map(r => this.extrairLista(r)));

@@ -1,128 +1,310 @@
 
-<div class="view-container">
+<div class="dashboard">
 
   <!-- CABEÇALHO -->
-  <div class="header-flex">
-
-    <div class="page-title-flex">
-
-      <div class="title-icon-box">
-        <svg width="30" height="30" viewBox="0 0 24 24"
-          fill="none" stroke="#2563eb" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-
+  <header class="dashboard-header">
+    <div class="header-left">
+      <div class="main-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-
         </svg>
       </div>
 
       <div>
-        <h2>Painel Administrativo</h2>
-        <p class="subtitle">
-          Resumo geral do sistema da biblioteca em tempo real.
-        </p>
+        <h1>Painel Administrativo</h1>
+        <p>Resumo geral do sistema da biblioteca em tempo real.</p>
       </div>
-
     </div>
+  </header>
 
+  <!-- CARREGAMENTO -->
+  <div class="loading-state" *ngIf="carregando">
+    <div class="loader"></div>
+    <span>Carregando informações da biblioteca...</span>
   </div>
 
-  <!-- CARDS DE ESTATÍSTICAS -->
-  <div class="stats-grid">
+  <!-- ERRO -->
+  <div class="error-state" *ngIf="erroCarregamento">
+    <span>Não foi possível carregar os dados do Dashboard.</span>
+    <button (click)="atualizarDashboard()">Tentar novamente</button>
+  </div>
 
-    <!-- LIVROS -->
-    <div class="stat-card border-blue">
+  <ng-container *ngIf="!carregando && !erroCarregamento">
 
-      <div class="stat-content">
-        <span class="stat-title">Livros Cadastrados</span>
-        <span class="stat-value">{{ totalLivros }}</span>
+    <!-- INDICADORES -->
+    <section class="stats-grid">
+
+      <article class="stat-card books-card">
+        <div class="stat-top">
+          <div class="stat-icon blue-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 7v14"></path>
+              <path d="M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4"></path>
+              <path d="M12 7a4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13"></path>
+              <path d="M3 18a2 2 0 0 0 2 2h3a4 4 0 0 1 4 4"></path>
+            </svg>
+          </div>
+          <span class="stat-label">LIVROS CADASTRADOS</span>
+        </div>
+        <div class="stat-number">{{ totalLivros }}</div>
         <span class="stat-description">Total de livros no acervo</span>
-      </div>
+        <div class="decoration book-decoration">▤</div>
+      </article>
 
-      <div class="stat-icon icon-blue">
-        <svg width="27" height="27" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-
-          <path d="M12 7v14"></path>
-          <path d="M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4 4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13"></path>
-          <path d="M3 18a2 2 0 0 0 2 2h3a4 4 0 0 1 4 4"></path>
-        </svg>
-      </div>
-
-    </div>
-
-    <!-- AUTORES -->
-    <div class="stat-card border-purple">
-
-      <div class="stat-content">
-        <span class="stat-title">Autores Registrados</span>
-        <span class="stat-value">{{ totalAutores }}</span>
+      <article class="stat-card authors-card">
+        <div class="stat-top">
+          <div class="stat-icon purple-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="9" cy="8" r="4"></circle>
+              <path d="M3 21v-2a6 6 0 0 1 12 0v2"></path>
+              <path d="M16 4.5a4 4 0 0 1 0 7.5"></path>
+              <path d="M21 21v-2a6 6 0 0 0-4-5.65"></path>
+            </svg>
+          </div>
+          <span class="stat-label">AUTORES REGISTRADOS</span>
+        </div>
+        <div class="stat-number">{{ totalAutores }}</div>
         <span class="stat-description">Autores no catálogo</span>
-      </div>
+        <div class="decoration feather-decoration">✦</div>
+      </article>
 
-      <div class="stat-icon icon-purple">
-        <svg width="27" height="27" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-
-          <circle cx="9" cy="8" r="4"></circle>
-          <path d="M3 21v-2a6 6 0 0 1 12 0v2"></path>
-          <path d="M16 4.5a4 4 0 0 1 0 7.5"></path>
-          <path d="M21 21v-2a6 6 0 0 0-4-5.65"></path>
-
-        </svg>
-      </div>
-
-    </div>
-
-    <!-- USUÁRIOS -->
-    <div class="stat-card border-green">
-
-      <div class="stat-content">
-        <span class="stat-title">Usuários Ativos</span>
-        <span class="stat-value">{{ totalUsuarios }}</span>
+      <article class="stat-card users-card">
+        <div class="stat-top">
+          <div class="stat-icon green-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+            </svg>
+          </div>
+          <span class="stat-label">USUÁRIOS CADASTRADOS</span>
+        </div>
+        <div class="stat-number">{{ totalUsuarios }}</div>
         <span class="stat-description">Usuários cadastrados</span>
-      </div>
+        <div class="decoration users-decoration">♧</div>
+      </article>
 
-      <div class="stat-icon icon-green">
-        <svg width="27" height="27" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+      <article class="stat-card loans-card">
+        <div class="stat-top">
+          <div class="stat-icon orange-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 3l4 4-4 4"></path>
+              <path d="M3 7h18"></path>
+              <path d="M7 21l-4-4 4-4"></path>
+              <path d="M21 17H3"></path>
+            </svg>
+          </div>
+          <span class="stat-label">EMPRÉSTIMOS REGISTRADOS</span>
+        </div>
+        <div class="stat-number">{{ totalEmprestimos }}</div>
+        <span class="stat-description">Total de empréstimos</span>
+        <div class="decoration loans-decoration">⇄</div>
+      </article>
 
-          <circle cx="12" cy="8" r="4"></circle>
-          <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
+    </section>
 
-        </svg>
-      </div>
+    <!-- GRÁFICOS -->
+    <section class="charts-grid">
 
-    </div>
+      <article class="panel chart-panel">
+        <div class="panel-heading">
+          <div class="heading-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 3v18h18"></path>
+              <rect x="7" y="10" width="3" height="8" rx="1"></rect>
+              <rect x="14" y="5" width="3" height="13" rx="1"></rect>
+            </svg>
+          </div>
+          <div>
+            <h3>Empréstimos por mês</h3>
+            <p>Movimentação dos últimos 6 meses</p>
+          </div>
+        </div>
 
-    <!-- EMPRÉSTIMOS -->
-    <div class="stat-card border-amber">
+        <div class="chart-area">
+          <div class="chart-y-labels">
+            <span>{{ maxEmprestimos }}</span>
+            <span>{{ (maxEmprestimos / 2) | number:'1.0-0' }}</span>
+            <span>0</span>
+          </div>
 
-      <div class="stat-content">
-        <span class="stat-title">Empréstimos Atuais</span>
-        <span class="stat-value">{{ totalEmprestimos }}</span>
-        <span class="stat-description">Empréstimos registrados</span>
-      </div>
+          <div class="bar-chart">
+            <div class="chart-grid-line line-top"></div>
+            <div class="chart-grid-line line-middle"></div>
+            <div class="chart-grid-line line-bottom"></div>
 
-      <div class="stat-icon icon-amber">
-        <svg width="27" height="27" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+            <div class="bar-item" *ngFor="let mes of meses">
+              <div class="bar-value" *ngIf="mes.quantidade > 0">
+                {{ mes.quantidade }}
+              </div>
+              <div class="bar-track">
+                <div class="bar"
+                  [class.bar-highlight]="mes.destaque"
+                  [style.height.%]="alturaBarra(mes.quantidade)">
+                </div>
+              </div>
+              <span class="bar-label">{{ mes.nome }}</span>
+            </div>
+          </div>
+        </div>
+      </article>
 
-          <path d="M17 3l4 4-4 4"></path>
-          <path d="M3 7h18"></path>
-          <path d="M7 21l-4-4 4-4"></path>
-          <path d="M21 17H3"></path>
+      <article class="panel status-panel">
+        <div class="panel-heading">
+          <div class="heading-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-9-9"></path>
+              <path d="M21 3v9h-9"></path>
+              <path d="M12 3v9l6.4 6.4"></path>
+            </svg>
+          </div>
+          <div>
+            <h3>Status dos empréstimos</h3>
+            <p>Distribuição atual dos registros</p>
+          </div>
+        </div>
 
-        </svg>
-      </div>
+        <div class="status-content">
+          <div class="donut-wrapper">
+            <div class="donut-chart"
+              [style.background]="
+                totalEmprestimos === 0
+                ? '#e8edf5'
+                : 'conic-gradient(#16b978 0% ' + percentualAtivos + '%, #f59e0b ' + percentualAtivos + '% ' + (percentualAtivos + percentualAtrasados) + '%, #9254f5 ' + (percentualAtivos + percentualAtrasados) + '% 100%)'
+              ">
+              <div class="donut-center">
+                <strong>{{ totalEmprestimos }}</strong>
+                <span>Total</span>
+              </div>
+            </div>
+          </div>
 
-    </div>
+          <div class="status-legend">
+            <div class="legend-item">
+              <span class="legend-dot active-dot"></span>
+              <span class="legend-name">Ativos</span>
+              <strong>{{ totalAtivos }}</strong>
+              <span class="legend-percent">{{ percentualAtivos | number:'1.0-0' }}%</span>
+            </div>
 
-  </div>
+            <div class="legend-item">
+              <span class="legend-dot late-dot"></span>
+              <span class="legend-name">Atrasados</span>
+              <strong>{{ totalAtrasados }}</strong>
+              <span class="legend-percent">{{ percentualAtrasados | number:'1.0-0' }}%</span>
+            </div>
+
+            <div class="legend-item">
+              <span class="legend-dot returned-dot"></span>
+              <span class="legend-name">Devolvidos</span>
+              <strong>{{ totalDevolvidos }}</strong>
+              <span class="legend-percent">{{ percentualDevolvidos | number:'1.0-0' }}%</span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ÚLTIMOS EMPRÉSTIMOS -->
+    <section class="bottom-grid">
+
+      <article class="panel recent-panel">
+        <div class="recent-heading">
+          <div class="panel-heading">
+            <div class="heading-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+            </div>
+            <div>
+              <h3>Últimos empréstimos</h3>
+              <p>Registros mais recentes do sistema</p>
+            </div>
+          </div>
+
+          <a routerLink="/admin/emprestimos" class="view-all">
+            Ver todos
+            <span>→</span>
+          </a>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Usuário</th>
+                <th>Livro</th>
+                <th>Data</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr *ngFor="let emp of ultimosEmprestimos">
+                <td>
+                  <strong>{{ emp.usuario?.nome || 'Usuário' }}</strong>
+                </td>
+                <td>{{ emp.livro?.titulo || 'Livro' }}</td>
+                <td>{{ formatarData(emp.dataEmprestimo || emp.dataRetirada) }}</td>
+                <td>
+                  <span class="status-badge"
+                    [ngClass]="{
+                      'badge-active': obterStatus(emp) === 'ATIVO',
+                      'badge-late': obterStatus(emp) === 'ATRASADO',
+                      'badge-returned': obterStatus(emp) === 'DEVOLVIDO'
+                    }">
+                    {{ obterStatus(emp) }}
+                  </span>
+                </td>
+              </tr>
+
+              <tr *ngIf="ultimosEmprestimos.length === 0">
+                <td colspan="4" class="empty-table">
+                  Nenhum empréstimo registrado.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <!-- CARD DE AÇÃO -->
+      <article class="action-card">
+        <div class="action-content">
+          <span class="action-eyebrow">BIBLIOTECA ADMIN</span>
+          <h3>Gerencie sua biblioteca de forma simples e eficiente.</h3>
+          <p>
+            Cadastre livros, autores e usuários e acompanhe
+            os empréstimos em um só lugar.
+          </p>
+          <a routerLink="/admin/livros" class="action-button">
+            <span>+</span>
+            Cadastrar novo livro
+          </a>
+        </div>
+
+        <div class="action-illustration">
+          <svg viewBox="0 0 180 150" fill="none">
+            <path d="M25 112L130 112L151 126L45 126Z" fill="#4338CA"/>
+            <path d="M25 112L25 92L130 92L130 112Z" fill="#6366F1"/>
+            <path d="M130 92L151 105V126L130 112Z" fill="#3730A3"/>
+            <path d="M42 83L145 83L165 97L62 97Z" fill="#F59E0B"/>
+            <path d="M42 83L42 63L145 63L145 83Z" fill="#FBBF24"/>
+            <path d="M145 63L165 77V97L145 83Z" fill="#D97706"/>
+            <path d="M15 55L110 55L130 69L35 69Z" fill="#4F46E5"/>
+            <path d="M15 55L15 35L110 35L110 55Z" fill="#818CF8"/>
+            <path d="M110 35L130 49V69L110 55Z" fill="#4338CA"/>
+            <path d="M100 20L118 8L136 20" stroke="#8B5CF6" stroke-width="5" stroke-linecap="round"/>
+            <path d="M120 29L145 19" stroke="#8B5CF6" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </article>
+
+    </section>
+
+  </ng-container>
 
 </div>

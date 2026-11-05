@@ -1,18 +1,59 @@
-<div class="admin-container">
-  <!-- Menu Lateral -->
-<nav>
-  <h2>Biblioteca Admin</h2>
-  <ul>
-    <li><a routerLink="/admin/dashboard" routerLinkActive="active">Dashboard</a></li>
-    <li><a routerLink="/admin/livros" routerLinkActive="active">Livros</a></li>
-    <li><a routerLink="/admin/autores" routerLinkActive="active">Autores</a></li>
-    <li><a routerLink="/admin/usuarios" routerLinkActive="active">Usuários</a></li>
-    <li><a routerLink="/admin/emprestimos" routerLinkActive="active">Empréstimos</a></li>
-  </ul>
-</nav>
 
-  <!-- Área de Conteúdo Dinâmico onde as páginas aparecem -->
-  <main>
-    <router-outlet></router-outlet>
-  </main>
-</div>
+@if (!isLoginPage) {
+  <div class="admin-container">
+
+    <nav>
+      <h2>Biblioteca Admin</h2>
+
+      <ul>
+        <li>
+          <a routerLink="/admin/dashboard" routerLinkActive="active"
+             [routerLinkActiveOptions]="{ exact: true }">
+            Dashboard
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/admin/livros" routerLinkActive="active"
+             [routerLinkActiveOptions]="{ exact: true }">
+            Livros
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/admin/autores" routerLinkActive="active"
+             [routerLinkActiveOptions]="{ exact: true }">
+            Autores
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/admin/usuarios" routerLinkActive="active"
+             [routerLinkActiveOptions]="{ exact: true }">
+            Usuários
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/admin/emprestimos" routerLinkActive="active"
+             [routerLinkActiveOptions]="{ exact: true }">
+            Empréstimos
+          </a>
+        </li>
+      </ul>
+
+      <button class="logout-button" (click)="sair()">
+        <span>↪</span>
+        Sair
+      </button>
+
+    </nav>
+
+    <main>
+      <router-outlet></router-outlet>
+    </main>
+
+  </div>
+} @else {
+  <router-outlet></router-outlet>
+}
