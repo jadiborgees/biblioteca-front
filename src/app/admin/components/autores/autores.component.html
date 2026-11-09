@@ -129,7 +129,7 @@
           </tr>
 
           <!-- LISTA VAZIA -->
-          <tr *ngIf="filtrados.length === 0">
+          <tr *ngIf="totalRegistros === 0">
             <td colspan="4" class="empty-row">
               Nenhum autor encontrado.
             </td>
@@ -156,7 +156,7 @@
 
         <span>
           Mostrando {{ primeiroItem }}–{{ ultimoItem }}
-          de {{ filtrados.length }} registros
+          de {{ totalRegistros }} registros
         </span>
 
       </div>

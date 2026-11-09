@@ -1,4 +1,3 @@
-
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -13,8 +12,10 @@ import { ApiService } from '../../../services/api.service';
   styleUrl: './usuarios.component.css'
 })
 export class UsuariosComponent implements OnInit {
+
   usuarios: any[] = [];
   termoBusca = '';
+
   modoFormulario = false;
   isEdicao = false;
 
@@ -22,8 +23,12 @@ export class UsuariosComponent implements OnInit {
   itensPorPagina = 6;
   paginaAtual = 1;
 
-  // Erros de validação por campo
+  // Erros de validação
   errosCampo: { [key: string]: string } = {};
+
+  // Controle da consulta de CEP
+  cepConsultando = false;
+  ultimoCepConsultado = '';
 
   formUsuario: any = this.novoModelo();
 
@@ -36,6 +41,10 @@ export class UsuariosComponent implements OnInit {
   ngOnInit(): void {
     this.carregarUsuarios();
   }
+
+  // =====================================================
+  // MODELO DO USUÁRIO
+  // =====================================================
 
   private novoModelo(): any {
     return {
@@ -56,33 +65,53 @@ export class UsuariosComponent implements OnInit {
     };
   }
 
+  // =====================================================
+  // CARREGAMENTO DOS USUÁRIOS
+  // =====================================================
+
   carregarUsuarios(): void {
     this.api.getLista('usuarios').subscribe({
-      next: d => {
-        this.usuarios = d;
+      next: dados => {
+        this.usuarios = dados || [];
         this.ajustarPagina();
       },
-      error: e => this.erro(e)
+      error: erro => this.erro(erro)
     });
   }
+
+  // =====================================================
+  // PESQUISA
+  // =====================================================
 
   get usuariosFiltrados(): any[] {
     const q = this.termoBusca.trim().toLowerCase();
 
-    return !q ? this.usuarios : this.usuarios.filter(u =>
-      [
-        u.nome,
-        u.email,
-        u.telefone,
-        u.endereco?.cidade,
-        String(u.id)
-      ].some(v => String(v || '').toLowerCase().includes(q))
-    );
+    return !q
+      ? this.usuarios
+      : this.usuarios.filter(usuario =>
+          [
+            usuario.nome,
+            usuario.email,
+            usuario.telefone,
+            usuario.endereco?.cidade,
+            String(usuario.id)
+          ].some(valor =>
+            String(valor || '').toLowerCase().includes(q)
+          )
+        );
   }
 
-  // Usuários da página atual
+  atualizarPesquisa(): void {
+    this.paginaAtual = 1;
+  }
+
+  // =====================================================
+  // PAGINAÇÃO
+  // =====================================================
+
   get usuariosPaginados(): any[] {
-    const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+    const inicio =
+      (this.paginaAtual - 1) * this.itensPorPagina;
 
     return this.usuariosFiltrados.slice(
       inicio,
@@ -104,9 +133,13 @@ export class UsuariosComponent implements OnInit {
   }
 
   get primeiroItem(): number {
-    if (this.usuariosFiltrados.length === 0) return 0;
+    if (this.usuariosFiltrados.length === 0) {
+      return 0;
+    }
 
-    return (this.paginaAtual - 1) * this.itensPorPagina + 1;
+    return (
+      (this.paginaAtual - 1) * this.itensPorPagina + 1
+    );
   }
 
   get ultimoItem(): number {
@@ -133,19 +166,18 @@ export class UsuariosComponent implements OnInit {
     }
   }
 
-  atualizarPesquisa(): void {
-    this.paginaAtual = 1;
-  }
+  // =====================================================
+  // VALIDAÇÃO DE CAMPOS
+  // =====================================================
 
-  // Limpa o erro de um campo quando ele é alterado
   limparErro(campo: string): void {
     this.errosCampo[campo] = '';
     this.errosCampo['geral'] = '';
   }
 
-  // Validação do e-mail
   validarEmail(): void {
     const email = (this.formUsuario.email || '').trim();
+
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!email) {
@@ -157,129 +189,265 @@ export class UsuariosComponent implements OnInit {
     }
   }
 
+  // =====================================================
+  // ABRIR FORMULÁRIO
+  // =====================================================
+
   abrirNovo(): void {
     this.formUsuario = this.novoModelo();
     this.errosCampo = {};
     this.isEdicao = false;
     this.modoFormulario = true;
+    this.ultimoCepConsultado = '';
+    this.cepConsultando = false;
   }
 
-  abrirEdicao(u: any): void {
+  abrirEdicao(usuario: any): void {
     this.formUsuario = {
-      ...u,
+      ...usuario,
       endereco: {
         ...this.novoModelo().endereco,
-        ...(u.endereco || {})
+        ...(usuario.endereco || {})
       }
     };
 
     this.errosCampo = {};
     this.isEdicao = true;
     this.modoFormulario = true;
+
+    this.ultimoCepConsultado = '';
+    this.cepConsultando = false;
   }
 
   voltarParaLista(): void {
     this.modoFormulario = false;
     this.errosCampo = {};
+    this.ultimoCepConsultado = '';
+    this.cepConsultando = false;
   }
 
-  // Máscara dinâmica de telefone
+  // =====================================================
+  // MÁSCARA DE TELEFONE
+  // =====================================================
+
   aplicarMascaraTelefone(): void {
-    let v = (this.formUsuario.telefone || '')
+    let valor = (this.formUsuario.telefone || '')
       .replace(/\D/g, '')
       .slice(0, 11);
 
-    if (v.length > 10) {
-      v = v.replace(
+    if (valor.length > 10) {
+      valor = valor.replace(
         /^(\d{2})(\d{5})(\d{4})$/,
         '($1) $2-$3'
       );
-    } else if (v.length > 6) {
-      v = v.replace(
+    } else if (valor.length > 6) {
+      valor = valor.replace(
         /^(\d{2})(\d{4})(\d{0,4})$/,
         '($1) $2-$3'
       );
-    } else if (v.length > 2) {
-      v = v.replace(
+    } else if (valor.length > 2) {
+      valor = valor.replace(
         /^(\d{2})(\d{0,5})$/,
         '($1) $2'
       );
-    } else if (v.length > 0) {
-      v = `(${v}`;
+    } else if (valor.length > 0) {
+      valor = `(${valor}`;
     }
 
-    this.formUsuario.telefone = v;
+    this.formUsuario.telefone = valor;
+    this.limparErro('telefone');
   }
 
-  // Máscara de CEP + integração com ViaCEP
+  // =====================================================
+  // MÁSCARA DE CEP
+  // =====================================================
+
   aplicarMascaraCep(): void {
-    let v = (this.formUsuario.endereco.cep || '')
+    let valor = (this.formUsuario.endereco.cep || '')
       .replace(/\D/g, '')
       .slice(0, 8);
 
-    const rawCep = v;
-
-    if (v.length > 5) {
-      v = v.replace(
+    if (valor.length > 5) {
+      valor = valor.replace(
         /^(\d{5})(\d{1,3})$/,
         '$1-$2'
       );
     }
 
-    this.formUsuario.endereco.cep = v;
+    this.formUsuario.endereco.cep = valor;
 
-    if (rawCep.length === 8) {
-      this.buscarCep(rawCep);
+    this.limparErro('cep');
+
+    const cepLimpo = valor.replace(/\D/g, '');
+
+    // Permite uma nova consulta quando o CEP é alterado
+    if (cepLimpo !== this.ultimoCepConsultado) {
+      this.ultimoCepConsultado = '';
+    }
+
+    // Consulta somente quando existem os 8 dígitos
+    if (cepLimpo.length === 8) {
+      this.buscarCep(cepLimpo);
     }
   }
 
+  // =====================================================
+  // CONSULTA DE CEP - VIACEP
+  // =====================================================
+
   private buscarCep(cepLimpo: string): void {
+
+    if (
+      this.cepConsultando ||
+      this.ultimoCepConsultado === cepLimpo
+    ) {
+      return;
+    }
+
+    this.cepConsultando = true;
+    this.ultimoCepConsultado = cepLimpo;
+
+    this.errosCampo['cep'] = '';
+
     this.http.get<any>(
       `https://viacep.com.br/ws/${cepLimpo}/json/`
     ).subscribe({
-      next: (dados) => {
-        if (!dados.erro) {
-          this.formUsuario.endereco.logradouro =
-            dados.logradouro || '';
 
-          this.formUsuario.endereco.bairro =
-            dados.bairro || '';
+      next: dados => {
 
-          this.formUsuario.endereco.cidade =
-            dados.localidade || '';
+        if (dados?.erro) {
+          this.cepConsultando = false;
+          this.ultimoCepConsultado = '';
 
-          this.formUsuario.endereco.estado =
-            dados.uf || '';
-
-          this.errosCampo['cep'] = '';
-        } else {
           this.errosCampo['cep'] = 'CEP não encontrado.';
+          return;
         }
+
+        this.preencherEndereco({
+          logradouro: dados.logradouro,
+          bairro: dados.bairro,
+          cidade: dados.localidade,
+          estado: dados.uf
+        });
+
+        this.cepConsultando = false;
+        this.errosCampo['cep'] = '';
+
       },
+
       error: () => {
-        this.errosCampo['cep'] =
-          'Não foi possível consultar o CEP. Tente novamente.';
+
+        // Se ViaCEP falhar, tenta a BrasilAPI
+        this.buscarCepAlternativo(cepLimpo);
+
       }
+
     });
   }
 
+  // =====================================================
+  // CONSULTA ALTERNATIVA - BRASILAPI
+  // =====================================================
+
+  private buscarCepAlternativo(cepLimpo: string): void {
+
+    this.http.get<any>(
+      `https://brasilapi.com.br/api/cep/v1/${cepLimpo}`
+    ).subscribe({
+
+      next: dados => {
+
+        if (!dados || !dados.city || !dados.state) {
+          this.finalizarErroCep(
+            'Não foi possível localizar esse CEP. Confira os números.'
+          );
+          return;
+        }
+
+        this.preencherEndereco({
+          logradouro: dados.street,
+          bairro: dados.neighborhood,
+          cidade: dados.city,
+          estado: dados.state
+        });
+
+        this.cepConsultando = false;
+        this.errosCampo['cep'] = '';
+
+      },
+
+      error: () => {
+
+        this.finalizarErroCep(
+          'Não foi possível consultar o CEP. Verifique sua conexão ou preencha o endereço manualmente.'
+        );
+
+      }
+
+    });
+  }
+
+  // =====================================================
+  // PREENCHIMENTO AUTOMÁTICO DO ENDEREÇO
+  // =====================================================
+
+  private preencherEndereco(dados: any): void {
+
+    this.formUsuario.endereco.logradouro =
+      dados.logradouro || '';
+
+    this.formUsuario.endereco.bairro =
+      dados.bairro || '';
+
+    this.formUsuario.endereco.cidade =
+      dados.cidade || '';
+
+    this.formUsuario.endereco.estado =
+      dados.estado || '';
+
+    this.errosCampo['cep'] = '';
+    this.errosCampo['logradouro'] = '';
+    this.errosCampo['bairro'] = '';
+    this.errosCampo['cidade'] = '';
+    this.errosCampo['estado'] = '';
+  }
+
+  private finalizarErroCep(mensagem: string): void {
+    this.cepConsultando = false;
+    this.ultimoCepConsultado = '';
+    this.errosCampo['cep'] = mensagem;
+  }
+
+  // =====================================================
+  // SALVAR USUÁRIO
+  // =====================================================
+
   salvarUsuario(): void {
-    const u = this.formUsuario;
-    const e = u.endereco || {};
+
+    const usuario = this.formUsuario;
+    const endereco = usuario.endereco || {};
 
     this.errosCampo = {};
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const telefoneLimpo = (u.telefone || '').replace(/\D/g, '');
 
-    // Dados pessoais
-    if (!u.nome?.trim()) {
+    const telefoneLimpo = (usuario.telefone || '')
+      .replace(/\D/g, '');
+
+    const cepLimpo = (endereco.cep || '')
+      .replace(/\D/g, '');
+
+    // ---------------------------------------------
+    // DADOS PESSOAIS
+    // ---------------------------------------------
+
+    if (!usuario.nome?.trim()) {
       this.errosCampo['nome'] = 'Informe o nome completo.';
     }
 
-    if (!u.email?.trim()) {
+    if (!usuario.email?.trim()) {
       this.errosCampo['email'] = 'Informe o e-mail.';
-    } else if (!emailRegex.test(u.email.trim())) {
+    } else if (!emailRegex.test(usuario.email.trim())) {
       this.errosCampo['email'] = 'Informe um e-mail válido.';
     }
 
@@ -292,84 +460,122 @@ export class UsuariosComponent implements OnInit {
       this.errosCampo['telefone'] = 'Informe um telefone válido.';
     }
 
-    if (!u.dataNascimento) {
+    if (!usuario.dataNascimento) {
       this.errosCampo['dataNascimento'] =
         'Informe a data de nascimento.';
     }
 
-    // Endereço
-    if (!e.cep?.trim()) {
+    // ---------------------------------------------
+    // ENDEREÇO
+    // ---------------------------------------------
+
+    if (!cepLimpo) {
       this.errosCampo['cep'] = 'Informe o CEP.';
-    } else if (!/^\d{5}-?\d{3}$/.test(e.cep)) {
+    } else if (cepLimpo.length !== 8) {
       this.errosCampo['cep'] = 'Informe um CEP válido.';
     }
 
-    if (!e.estado?.trim()) {
+    if (!endereco.estado?.trim()) {
       this.errosCampo['estado'] = 'Informe o estado.';
-    } else if (e.estado.trim().length !== 2) {
+    } else if (endereco.estado.trim().length !== 2) {
       this.errosCampo['estado'] =
         'Informe a sigla do estado. Exemplo: SP.';
     }
 
-    if (!e.logradouro?.trim()) {
+    if (!endereco.logradouro?.trim()) {
       this.errosCampo['logradouro'] = 'Informe o logradouro.';
     }
 
-    if (!e.numero?.trim()) {
+    if (!endereco.numero?.trim()) {
       this.errosCampo['numero'] = 'Informe o número.';
     }
 
-    if (!e.bairro?.trim()) {
+    if (!endereco.bairro?.trim()) {
       this.errosCampo['bairro'] = 'Informe o bairro.';
     }
 
-    if (!e.cidade?.trim()) {
+    if (!endereco.cidade?.trim()) {
       this.errosCampo['cidade'] = 'Informe a cidade.';
     }
 
-    // Interrompe o envio se houver erros
-    if (Object.values(this.errosCampo).some(erro => !!erro)) {
+    // Não permite salvar durante a consulta do CEP
+    if (this.cepConsultando) {
+      this.errosCampo['cep'] =
+        'Aguarde a consulta do CEP terminar.';
+    }
+
+    // ---------------------------------------------
+    // VERIFICAÇÃO DOS ERROS
+    // ---------------------------------------------
+
+    if (
+      Object.values(this.errosCampo).some(erro => !!erro)
+    ) {
       return;
     }
 
+    // ---------------------------------------------
+    // PAYLOAD
+    // ---------------------------------------------
+
     const payload = {
-      nome: u.nome.trim(),
-      email: u.email.trim(),
-      telefone: u.telefone.trim(),
-      dataNascimento: u.dataNascimento,
+      nome: usuario.nome.trim(),
+      email: usuario.email.trim(),
+      telefone: usuario.telefone.trim(),
+      dataNascimento: usuario.dataNascimento,
+
       endereco: {
-        logradouro: e.logradouro,
-        numero: e.numero,
-        complemento: e.complemento,
-        bairro: e.bairro,
-        cidade: e.cidade,
-        estado: e.estado.toUpperCase(),
-        cep: e.cep
+        logradouro: endereco.logradouro,
+        numero: endereco.numero,
+        complemento: endereco.complemento,
+        bairro: endereco.bairro,
+        cidade: endereco.cidade,
+        estado: endereco.estado.toUpperCase(),
+        cep: cepLimpo
       }
     };
 
-    const req = this.isEdicao
-      ? this.api.putItem('usuarios', u.id, payload)
-      : this.api.postItem('usuarios', payload);
+    // ---------------------------------------------
+    // REQUISIÇÃO
+    // ---------------------------------------------
 
-    req.subscribe({
+    const requisicao = this.isEdicao
+      ? this.api.putItem(
+          'usuarios',
+          usuario.id,
+          payload
+        )
+      : this.api.postItem(
+          'usuarios',
+          payload
+        );
+
+    requisicao.subscribe({
+
       next: () => {
+
         this.mostrarAlerta('Usuário salvo com sucesso!');
+
         this.errosCampo = {};
         this.modoFormulario = false;
+
         this.carregarUsuarios();
+
       },
-      error: err => {
+
+      error: erro => {
+
         const mensagem =
-          err?.error?.mensagem ||
-          err?.error?.erro ||
+          erro?.error?.mensagem ||
+          erro?.error?.erro ||
           'Não foi possível concluir a operação.';
 
-        const mensagemLower = String(mensagem).toLowerCase();
+        const mensagemLower =
+          String(mensagem).toLowerCase();
 
         // Erros relacionados ao e-mail
         if (
-          err?.status === 409 ||
+          erro?.status === 409 ||
           mensagemLower.includes('email') ||
           mensagemLower.includes('e-mail') ||
           mensagemLower.includes('já cadastrado') ||
@@ -377,42 +583,73 @@ export class UsuariosComponent implements OnInit {
           mensagemLower.includes('duplicado') ||
           mensagemLower.includes('duplicate')
         ) {
+
           this.errosCampo['email'] = mensagem;
           return;
+
         }
 
         // Outros erros da API
         this.errosCampo['geral'] = mensagem;
+
       }
+
     });
   }
 
+  // =====================================================
+  // EXCLUIR USUÁRIO
+  // =====================================================
+
   excluirUsuario(id: number): void {
+
     const confirmar = isPlatformBrowser(this.platformId)
       ? confirm('Tem certeza que deseja excluir este usuário?')
       : true;
 
-    if (confirmar) {
-      this.api.deleteItem('usuarios', id).subscribe({
-        next: () => this.carregarUsuarios(),
-        error: err => this.erro(err)
-      });
+    if (!confirmar) {
+      return;
     }
+
+    this.api.deleteItem('usuarios', id).subscribe({
+
+      next: () => {
+        this.carregarUsuarios();
+      },
+
+      error: erro => {
+        this.erro(erro);
+      }
+
+    });
   }
 
-  private mostrarAlerta(msg: string): void {
+  // =====================================================
+  // ALERTAS
+  // =====================================================
+
+  private mostrarAlerta(mensagem: string): void {
+
     if (isPlatformBrowser(this.platformId)) {
-      alert(msg);
+      alert(mensagem);
     }
+
   }
 
-  private erro(e: any): void {
-    console.error(e);
+  // =====================================================
+  // TRATAMENTO DE ERROS
+  // =====================================================
+
+  private erro(erro: any): void {
+
+    console.error('Erro na operação de usuários:', erro);
 
     this.mostrarAlerta(
-      e?.error?.mensagem ||
-      e?.error?.erro ||
+      erro?.error?.mensagem ||
+      erro?.error?.erro ||
       'Não foi possível concluir a operação.'
     );
+
   }
+
 }

@@ -606,3 +606,45 @@ tbody tr {
     justify-content: center;
   }
 }
+
+/* =====================================================
+   CENTRALIZAÇÃO DO FORMULÁRIO DE AUTORES
+===================================================== */
+
+.wizard-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+/* Mantém o cabeçalho alinhado à esquerda */
+.wizard-container > .page-title-flex {
+  width: 100%;
+}
+
+/* Centraliza o card na área principal */
+.wizard-container > .wizard-card {
+  width: min(600px, calc(100% - 32px));
+  margin: 24px auto;
+  box-sizing: border-box;
+}
+
+/* Evita que os campos ultrapassem o card */
+.wizard-card,
+.wizard-card * {
+  box-sizing: border-box;
+}
+
+.wizard-card input {
+  max-width: 100%;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 768px) {
+  .wizard-container > .wizard-card {
+    width: 100%;
+    margin: 20px auto;
+  }
+}

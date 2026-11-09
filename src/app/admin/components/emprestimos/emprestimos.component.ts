@@ -15,6 +15,7 @@ export class EmprestimosComponent implements OnInit {
 
   modoFormulario = false;
   sucessoModal = false;
+  processando = false;
 
   emprestimos: any[] = [];
   livros: any[] = [];
@@ -25,7 +26,6 @@ export class EmprestimosComponent implements OnInit {
   termoBuscaLivro = '';
 
   filtroStatus = 'TODOS';
-
   etapaAtual = 1;
 
   usuarioSelecionado: any = null;
@@ -68,30 +68,94 @@ export class EmprestimosComponent implements OnInit {
   // CARREGAR EMPRÉSTIMOS
   carregarEmprestimos(): void {
     this.api.getLista('emprestimos').subscribe({
-      next: d => {
-        this.emprestimos = d;
+      next: dados => {
+        this.emprestimos = dados || [];
         this.ajustarPagina();
       },
-      error: e => this.erro(e)
+      error: erro => this.erro(erro)
     });
   }
 
   // CARREGAR LIVROS E USUÁRIOS
   carregarDadosAuxiliares(): void {
     this.api.getLista('livros').subscribe({
-      next: d => this.livros = d,
-      error: e => this.erro(e)
+      next: dados => {
+        this.livros = dados || [];
+
+        if (this.livroSelecionado) {
+          const atualizado = this.livros.find(
+            livro => livro.id === this.livroSelecionado.id
+          );
+
+          if (atualizado) {
+            this.livroSelecionado = atualizado;
+          }
+        }
+      },
+      error: erro => this.erro(erro)
     });
 
     this.api.getLista('usuarios').subscribe({
-      next: d => this.usuarios = d,
-      error: e => this.erro(e)
+      next: dados => {
+        this.usuarios = dados || [];
+      },
+      error: erro => this.erro(erro)
     });
+  }
+
+  // QUANTIDADE DISPONÍVEL
+  obterQuantidadeDisponivel(livro: any): number {
+    if (!livro) {
+      return 0;
+    }
+
+    const quantidade = Number(
+      livro.quantidadeDisponivel ??
+      livro.estoqueDisponivel ??
+      livro.quantidadeTotal ??
+      5
+    );
+
+    return Number.isFinite(quantidade)
+      ? Math.max(0, quantidade)
+      : 0;
+  }
+
+  // QUANTIDADE TOTAL
+  obterQuantidadeTotal(livro: any): number {
+    if (!livro) {
+      return 0;
+    }
+
+    const quantidade = Number(
+      livro.quantidadeTotal ??
+      livro.quantidade ??
+      5
+    );
+
+    return Number.isFinite(quantidade)
+      ? Math.max(0, quantidade)
+      : 5;
+  }
+
+  // TOTAL DE LIVROS COM ESTOQUE
+  get totalLivrosDisponiveis(): number {
+    return this.livros.filter(
+      livro => this.obterQuantidadeDisponivel(livro) > 0
+    ).length;
+  }
+
+  // VERIFICAR DISPONIBILIDADE
+  livroDisponivel(livro: any): boolean {
+    return this.obterQuantidadeDisponivel(livro) > 0;
   }
 
   // VERIFICAR ATRASO
   estaAtrasado(emp: any): boolean {
-    if (emp.status !== 'ATIVO') {
+    if (
+      emp.status !== 'ATIVO' &&
+      emp.status !== 'ATRASADO'
+    ) {
       return false;
     }
 
@@ -102,16 +166,36 @@ export class EmprestimosComponent implements OnInit {
       return false;
     }
 
-    return dataPrevista.substring(0, 10) < this.dataAtual();
+    return String(dataPrevista).substring(0, 10) < this.dataAtual();
   }
 
   // OBTER STATUS
   obterStatus(emp: any): string {
+    if (emp.status === 'CANCELADO') {
+      return 'CANCELADO';
+    }
+
+    if (emp.status === 'DEVOLVIDO') {
+      return 'DEVOLVIDO';
+    }
+
     if (this.estaAtrasado(emp)) {
       return 'ATRASADO';
     }
 
     return emp.status || 'ATIVO';
+  }
+
+  // PODE DEVOLVER?
+  podeDevolver(emp: any): boolean {
+    const status = this.obterStatus(emp);
+    return status === 'ATIVO' || status === 'ATRASADO';
+  }
+
+  // PODE CANCELAR?
+  podeCancelar(emp: any): boolean {
+    const status = this.obterStatus(emp);
+    return status === 'ATIVO' || status === 'ATRASADO';
   }
 
   // QUANTIDADES DOS FILTROS
@@ -121,19 +205,25 @@ export class EmprestimosComponent implements OnInit {
 
   get totalAtivos(): number {
     return this.emprestimos.filter(
-      emp => emp.status === 'ATIVO' && !this.estaAtrasado(emp)
+      emp => this.obterStatus(emp) === 'ATIVO'
     ).length;
   }
 
   get totalDevolvidos(): number {
     return this.emprestimos.filter(
-      emp => emp.status === 'DEVOLVIDO'
+      emp => this.obterStatus(emp) === 'DEVOLVIDO'
     ).length;
   }
 
   get totalAtrasados(): number {
     return this.emprestimos.filter(
-      emp => this.estaAtrasado(emp)
+      emp => this.obterStatus(emp) === 'ATRASADO'
+    ).length;
+  }
+
+  get totalCancelados(): number {
+    return this.emprestimos.filter(
+      emp => this.obterStatus(emp) === 'CANCELADO'
     ).length;
   }
 
@@ -229,34 +319,49 @@ export class EmprestimosComponent implements OnInit {
   get usuariosFiltrados(): any[] {
     const q = this.termoBuscaUsuario.trim().toLowerCase();
 
-    return !q ? this.usuarios : this.usuarios.filter(u =>
-      [u.nome, u.email].some(v =>
-        String(v || '').toLowerCase().includes(q)
-      )
-    );
+    return !q
+      ? this.usuarios
+      : this.usuarios.filter(usuario =>
+          [usuario.nome, usuario.email].some(valor =>
+            String(valor || '').toLowerCase().includes(q)
+          )
+        );
   }
 
   // LIVROS FILTRADOS
   get livrosFiltrados(): any[] {
     const q = this.termoBuscaLivro.trim().toLowerCase();
 
-    return !q ? this.livros : this.livros.filter(l =>
-      [l.titulo, l.isbn, String(l.id)].some(v =>
-        String(v || '').toLowerCase().includes(q)
-      )
-    );
+    return !q
+      ? this.livros
+      : this.livros.filter(livro =>
+          [
+            livro.titulo,
+            livro.isbn,
+            String(livro.id)
+          ].some(valor =>
+            String(valor || '').toLowerCase().includes(q)
+          )
+        );
   }
 
   // SELECIONAR USUÁRIO
-  selecionarUsuario(u: any): void {
-    this.usuarioSelecionado = u;
-    this.formEmprestimo.usuarioId = u.id;
+  selecionarUsuario(usuario: any): void {
+    this.usuarioSelecionado = usuario;
+    this.formEmprestimo.usuarioId = usuario.id;
   }
 
   // SELECIONAR LIVRO
-  selecionarLivro(l: any): void {
-    this.livroSelecionado = l;
-    this.formEmprestimo.livroId = l.id;
+  selecionarLivro(livro: any): void {
+    if (!this.livroDisponivel(livro)) {
+      this.mostrarAlerta(
+        'Este livro não possui exemplares disponíveis no momento.'
+      );
+      return;
+    }
+
+    this.livroSelecionado = livro;
+    this.formEmprestimo.livroId = livro.id;
   }
 
   // ABRIR NOVO EMPRÉSTIMO
@@ -265,6 +370,7 @@ export class EmprestimosComponent implements OnInit {
 
     this.modoFormulario = true;
     this.sucessoModal = false;
+    this.processando = false;
     this.etapaAtual = 1;
 
     this.termoBuscaUsuario = '';
@@ -272,12 +378,15 @@ export class EmprestimosComponent implements OnInit {
 
     this.usuarioSelecionado = null;
     this.livroSelecionado = null;
+
+    this.carregarDadosAuxiliares();
   }
 
   // VOLTAR PARA LISTAGEM
   voltarParaLista(): void {
     this.modoFormulario = false;
     this.sucessoModal = false;
+    this.processando = false;
     this.paginaAtual = 1;
   }
 
@@ -292,8 +401,15 @@ export class EmprestimosComponent implements OnInit {
   }
 
   validarEtapa2(): boolean {
-    if (!this.formEmprestimo.livroId) {
+    if (!this.formEmprestimo.livroId || !this.livroSelecionado) {
       this.mostrarAlerta('Selecione um livro.');
+      return false;
+    }
+
+    if (!this.livroDisponivel(this.livroSelecionado)) {
+      this.mostrarAlerta(
+        'Este livro não possui exemplares disponíveis. Selecione outro livro.'
+      );
       return false;
     }
 
@@ -319,8 +435,13 @@ export class EmprestimosComponent implements OnInit {
 
   // PRÓXIMA ETAPA
   proximaEtapa(): void {
-    if (this.etapaAtual === 1 && !this.validarEtapa1()) return;
-    if (this.etapaAtual === 2 && !this.validarEtapa2()) return;
+    if (this.etapaAtual === 1 && !this.validarEtapa1()) {
+      return;
+    }
+
+    if (this.etapaAtual === 2 && !this.validarEtapa2()) {
+      return;
+    }
 
     if (this.etapaAtual < 3) {
       this.etapaAtual++;
@@ -336,32 +457,47 @@ export class EmprestimosComponent implements OnInit {
 
   // FINALIZAR EMPRÉSTIMO
   finalizarEmprestimo(): void {
-    if (!this.validarEtapa3()) return;
+    if (this.processando) {
+      return;
+    }
+
+    if (!this.validarEtapa3()) {
+      return;
+    }
+
+    if (!this.validarEtapa2()) {
+      this.etapaAtual = 2;
+      return;
+    }
 
     const payload = {
       dataEmprestimo: this.formEmprestimo.dataEmprestimo,
       dataDevolucaoPrevista:
         this.formEmprestimo.dataDevolucaoPrevista,
       status: 'ATIVO',
-
       usuario: {
-        id: this.usuarioSelecionado.id,
-        nome: this.usuarioSelecionado.nome,
-        email: this.usuarioSelecionado.email
+        id: this.usuarioSelecionado.id
       },
-
       livro: {
-        id: this.livroSelecionado.id,
-        titulo: this.livroSelecionado.titulo
+        id: this.livroSelecionado.id
       }
     };
 
+    this.processando = true;
+
     this.api.postItem('emprestimos', payload).subscribe({
       next: () => {
+        this.processando = false;
         this.sucessoModal = true;
+
         this.carregarEmprestimos();
+        this.carregarDadosAuxiliares();
       },
-      error: e => this.erro(e)
+      error: erro => {
+        this.processando = false;
+        this.erro(erro);
+        this.carregarDadosAuxiliares();
+      }
     });
   }
 
@@ -371,28 +507,63 @@ export class EmprestimosComponent implements OnInit {
       ? confirm('Confirmar a devolução deste livro?')
       : true;
 
-    if (confirmar) {
-      this.api.patchItem('emprestimos', id, '/devolver').subscribe({
-        next: () => this.carregarEmprestimos(),
-        error: e => this.erro(e)
-      });
+    if (!confirmar) {
+      return;
     }
+
+    this.api.patchItem('emprestimos', id, '/devolver').subscribe({
+      next: () => {
+        this.carregarEmprestimos();
+        this.carregarDadosAuxiliares();
+
+        this.mostrarAlerta(
+          'Devolução registrada com sucesso.'
+        );
+      },
+      error: erro => this.erro(erro)
+    });
+  }
+
+  // CANCELAR EMPRÉSTIMO
+  cancelar(id: number): void {
+    const confirmar = isPlatformBrowser(this.platformId)
+      ? confirm(
+          'Deseja realmente cancelar este empréstimo? O exemplar deverá retornar ao estoque.'
+        )
+      : true;
+
+    if (!confirmar) {
+      return;
+    }
+
+    this.api.patchItem('emprestimos', id, '/cancelar').subscribe({
+      next: () => {
+        this.carregarEmprestimos();
+        this.carregarDadosAuxiliares();
+
+        this.mostrarAlerta(
+          'Empréstimo cancelado com sucesso.'
+        );
+      },
+      error: erro => this.erro(erro)
+    });
   }
 
   // ALERTAS
-  private mostrarAlerta(msg: string): void {
+  private mostrarAlerta(mensagem: string): void {
     if (isPlatformBrowser(this.platformId)) {
-      alert(msg);
+      alert(mensagem);
     }
   }
 
   // TRATAMENTO DE ERROS
-  private erro(e: any): void {
-    console.error(e);
+  private erro(erro: any): void {
+    console.error(erro);
 
     this.mostrarAlerta(
-      e?.error?.mensagem ||
-      e?.error?.erro ||
+      erro?.error?.mensagem ||
+      erro?.error?.erro ||
+      erro?.error?.message ||
       'Não foi possível concluir a operação.'
     );
   }

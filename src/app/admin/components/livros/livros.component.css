@@ -679,3 +679,210 @@ tbody tr:last-child td {
     padding: 0 6px;
   }
 }
+
+
+/* Centralização do formulário de livros */
+.wizard-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.wizard-container > .header-flex {
+  width: 100%;
+}
+
+.wizard-card {
+  width: min(100%, 760px);
+  margin: 0 auto;
+}
+
+.author-search { position: relative; }
+.author-suggestions {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #d5deea;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 35, 68, .12);
+}
+.author-suggestion {
+  display: block;
+  width: 100%;
+  padding: 11px 14px;
+  text-align: left;
+  color: #334155;
+  background: #fff;
+  border-radius: 0;
+}
+.author-suggestion:hover { background: #eff6ff; color: #0756d9; }
+.selected-authors { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.author-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  font-size: .82rem;
+}
+.author-chip button {
+  padding: 0;
+  color: #1d4ed8;
+  background: transparent;
+  font-size: 1.1rem;
+}
+.capa-preview { margin-top: 12px; }
+.capa-preview img {
+  display: block;
+  width: 110px;
+  height: 150px;
+  object-fit: contain;
+  padding: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+/* =========================================
+   RESUMO DO ESTOQUE
+========================================= */
+
+.stock-dashboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0 0 22px;
+}
+
+.stock-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 17px 20px;
+  background: #ffffff;
+  border: 1px solid #e0e8f3;
+  border-radius: 12px;
+  box-shadow: 0 3px 10px rgba(15, 35, 70, 0.04);
+}
+
+.stock-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stock-card span {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.stock-card strong {
+  color: #102344;
+  font-size: 1.4rem;
+  font-weight: 750;
+}
+
+.stock-card-icon {
+  width: 43px;
+  height: 43px;
+  min-width: 43px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+}
+
+.stock-icon-total {
+  color: #2563eb;
+  background: #dbeafe;
+}
+
+.stock-icon-available {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.stock-icon-loaned {
+  color: #b45309;
+  background: #fef3c7;
+}
+
+/* =========================================
+   COLUNA DE ESTOQUE
+========================================= */
+
+.stock-cell {
+  min-width: 155px;
+}
+
+.stock-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.stock-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.stock-status-available {
+  color: #15803d;
+  background: #dcfce7;
+}
+
+.stock-status-empty {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+.stock-numbers {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stock-available-number {
+  color: #15803d;
+  font-size: 0.77rem;
+  font-weight: 700;
+}
+
+.stock-total-number {
+  color: #b45309;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.stock-total {
+  color: #94a3b8;
+  font-size: 0.7rem;
+}
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media (max-width: 850px) {
+  .stock-dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 520px) {
+  .stock-card {
+    padding: 14px;
+  }
+}

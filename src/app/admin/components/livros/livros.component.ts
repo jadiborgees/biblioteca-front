@@ -1,4 +1,3 @@
-
 import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -14,20 +13,25 @@ import { ApiService } from '../../../services/api.service';
 export class LivrosComponent implements OnInit {
 
   livros: any[] = [];
+  todosLivros: any[] = [];
   autores: any[] = [];
+
   termoBusca = '';
+  buscaAutor = '';
+  autoresSelecionados: any[] = [];
 
   modoFormulario = false;
   isEdicao = false;
+  salvando = false;
+  carregando = false;
 
-  // Paginação
-  itensPorPagina = 6;
+  itensPorPagina = 10;
   paginaAtual = 1;
+  totalElementosBackend = 0;
+  totalPaginasBackend = 0;
 
-  // Caminho das capas
   private readonly pastaCapas = '/image/livros/';
 
-  // Associação entre títulos e arquivos das capas
   private readonly capasLivros: { [titulo: string]: string } = {
     'a hora da estrela': 'a-hora-da-estrela.jpg',
     'capitães da areia': 'capitaes-da-areia.jpg',
@@ -51,7 +55,8 @@ export class LivrosComponent implements OnInit {
     titulo: '',
     isbn: '',
     anoPublicacao: new Date().getFullYear(),
-    autorIds: [] as number[]
+    capaUrl: '',
+    autorIds: []
   };
 
   constructor(
@@ -64,40 +69,160 @@ export class LivrosComponent implements OnInit {
     this.carregarAutores();
   }
 
+  // =====================================================
+  // CARREGAMENTO
+  // =====================================================
+
   carregar(): void {
-    this.api.getLista('livros').subscribe({
-      next: data => {
-        this.livros = data;
-        this.ajustarPagina();
+    this.carregarPagina();
+    this.carregarCatalogoAuxiliar();
+  }
+
+  private carregarPagina(): void {
+    this.carregando = true;
+
+    this.api.getPagina<any>(
+      'livros',
+      this.paginaAtual - 1,
+      this.itensPorPagina
+    ).subscribe({
+      next: resposta => {
+        this.livros = resposta?.conteudo || [];
+        this.totalElementosBackend = Number(resposta?.totalElementos || 0);
+        this.totalPaginasBackend = Number(resposta?.totalPaginas || 0);
+        this.carregando = false;
+
+        if (
+          this.totalPaginasBackend > 0 &&
+          this.paginaAtual > this.totalPaginasBackend
+        ) {
+          this.paginaAtual = this.totalPaginasBackend;
+          this.carregarPagina();
+        }
       },
-      error: e => this.erro('livros', e)
+      error: erro => {
+        this.carregando = false;
+        this.erro('carregar livros', erro);
+      }
+    });
+  }
+
+  private carregarCatalogoAuxiliar(): void {
+    this.api.getLista('livros').subscribe({
+      next: dados => {
+        this.todosLivros = dados || [];
+      },
+      error: erro => this.erro('carregar catálogo de livros', erro)
     });
   }
 
   carregarAutores(): void {
     this.api.getLista('autores').subscribe({
-      next: data => this.autores = data,
-      error: e => this.erro('autores', e)
+      next: dados => {
+        this.autores = dados || [];
+      },
+      error: erro => this.erro('carregar autores', erro)
     });
   }
 
-  get filtrados(): any[] {
-    const q = this.termoBusca.trim().toLowerCase();
+  // =====================================================
+  // ESTOQUE
+  // =====================================================
 
-    return !q
-      ? this.livros
-      : this.livros.filter(l =>
-          [
-            l.titulo,
-            l.isbn,
-            String(l.id),
-            ...(l.autores || []).map((a: any) => a.nome)
-          ].some(v => String(v || '').toLowerCase().includes(q))
-        );
+  obterQuantidadeTotal(livro: any): number {
+    const quantidade = Number(livro?.quantidadeTotal);
+    return Number.isFinite(quantidade) ? quantidade : 0;
   }
 
-  // Livros da página atual
+  obterQuantidadeDisponivel(livro: any): number {
+    const quantidade = Number(livro?.quantidadeDisponivel);
+    return Number.isFinite(quantidade) ? quantidade : 0;
+  }
+
+  obterQuantidadeEmprestada(livro: any): number {
+    return Math.max(
+      0,
+      this.obterQuantidadeTotal(livro) -
+      this.obterQuantidadeDisponivel(livro)
+    );
+  }
+
+  livroDisponivel(livro: any): boolean {
+    return this.obterQuantidadeDisponivel(livro) > 0;
+  }
+
+  obterStatusEstoque(livro: any): string {
+    return this.livroDisponivel(livro) ? 'DISPONÍVEL' : 'ESGOTADO';
+  }
+
+  get totalExemplares(): number {
+    return this.todosLivros.reduce(
+      (total, livro) =>
+        total + this.obterQuantidadeTotal(livro),
+      0
+    );
+  }
+
+  get totalExemplaresDisponiveis(): number {
+    return this.todosLivros.reduce(
+      (total, livro) =>
+        total + this.obterQuantidadeDisponivel(livro),
+      0
+    );
+  }
+
+  get totalExemplaresEmprestados(): number {
+    return this.todosLivros.reduce(
+      (total, livro) =>
+        total + this.obterQuantidadeEmprestada(livro),
+      0
+    );
+  }
+
+  // =====================================================
+  // PESQUISA
+  // =====================================================
+
+  get filtrados(): any[] {
+    const q = this.termoBusca.trim().toLocaleLowerCase('pt-BR');
+
+    if (!q) {
+      return this.todosLivros;
+    }
+
+    return this.todosLivros.filter(livro => {
+      const valores = [
+        livro.titulo,
+        livro.isbn,
+        String(livro.id),
+        ...(livro.autores || []).map((autor: any) => autor.nome)
+      ];
+
+      return valores.some(valor =>
+        String(valor || '')
+          .toLocaleLowerCase('pt-BR')
+          .includes(q)
+      );
+    });
+  }
+
+  atualizarPesquisa(): void {
+    this.paginaAtual = 1;
+
+    if (!this.termoBusca.trim()) {
+      this.carregarPagina();
+    }
+  }
+
+  // =====================================================
+  // PAGINAÇÃO
+  // =====================================================
+
   get livrosPaginados(): any[] {
+    if (!this.termoBusca.trim()) {
+      return this.livros;
+    }
+
     const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
 
     return this.filtrados.slice(
@@ -106,19 +231,27 @@ export class LivrosComponent implements OnInit {
     );
   }
 
+  get totalRegistros(): number {
+    return this.termoBusca.trim()
+      ? this.filtrados.length
+      : this.totalElementosBackend;
+  }
+
   get totalPaginas(): number {
-    return Math.ceil(this.filtrados.length / this.itensPorPagina);
+    return this.termoBusca.trim()
+      ? Math.ceil(this.filtrados.length / this.itensPorPagina)
+      : this.totalPaginasBackend;
   }
 
   get paginas(): number[] {
     return Array.from(
       { length: this.totalPaginas },
-      (_, i) => i + 1
+      (_, indice) => indice + 1
     );
   }
 
   get primeiroItem(): number {
-    return this.filtrados.length === 0
+    return this.totalRegistros === 0
       ? 0
       : (this.paginaAtual - 1) * this.itensPorPagina + 1;
   }
@@ -126,48 +259,98 @@ export class LivrosComponent implements OnInit {
   get ultimoItem(): number {
     return Math.min(
       this.paginaAtual * this.itensPorPagina,
-      this.filtrados.length
+      this.totalRegistros
     );
   }
 
   irParaPagina(pagina: number): void {
-    if (pagina >= 1 && pagina <= this.totalPaginas) {
-      this.paginaAtual = pagina;
-    }
-  }
-
-  ajustarPagina(): void {
-    if (this.totalPaginas === 0) {
-      this.paginaAtual = 1;
+    if (
+      pagina < 1 ||
+      pagina > this.totalPaginas ||
+      pagina === this.paginaAtual
+    ) {
       return;
     }
 
-    if (this.paginaAtual > this.totalPaginas) {
-      this.paginaAtual = this.totalPaginas;
+    this.paginaAtual = pagina;
+
+    if (!this.termoBusca.trim()) {
+      this.carregarPagina();
     }
   }
 
-  atualizarPesquisa(): void {
-    this.paginaAtual = 1;
-  }
+    // =====================================================
+  // AUTORES
+  // =====================================================
 
   nomeAutores(livro: any): string {
     return (livro.autores || [])
-      .map((a: any) => a.nome)
+      .map((autor: any) => autor.nome)
       .join(', ') || '—';
   }
 
-  // Retorna a capa correspondente ao título do livro
+  get autoresSugeridos(): any[] {
+    const termo = this.buscaAutor.trim().toLocaleLowerCase('pt-BR');
+
+    if (!termo) {
+      return [];
+    }
+
+    const selecionados = new Set(
+      this.autoresSelecionados.map(autor => autor.id)
+    );
+
+    return this.autores
+      .filter(autor =>
+        !selecionados.has(autor.id) &&
+        String(autor.nome || '')
+          .toLocaleLowerCase('pt-BR')
+          .includes(termo)
+      )
+      .slice(0, 8);
+  }
+
+  selecionarAutor(autor: any): void {
+    if (
+      !this.autoresSelecionados.some(
+        selecionado => selecionado.id === autor.id
+      )
+    ) {
+      this.autoresSelecionados = [
+        ...this.autoresSelecionados,
+        autor
+      ];
+
+      this.formLivro.autorIds =
+        this.autoresSelecionados.map(item => item.id);
+    }
+
+    this.buscaAutor = '';
+  }
+
+  removerAutor(id: number): void {
+    this.autoresSelecionados =
+      this.autoresSelecionados.filter(autor => autor.id !== id);
+
+    this.formLivro.autorIds =
+      this.autoresSelecionados.map(autor => autor.id);
+  }
+
+  // =====================================================
+  // CAPAS
+  // =====================================================
+
   obterCapa(livro: any): string {
     const titulo = (livro?.titulo || '').trim().toLowerCase();
     const arquivo = this.capasLivros[titulo];
 
-    return arquivo
-      ? this.pastaCapas + arquivo
-      : '/image/livros/capa-padrao.jpg';
+    return livro?.capaUrl?.trim() || (
+      arquivo
+        ? this.pastaCapas + arquivo
+        : '/image/livros/capa-padrao.jpg'
+    );
   }
 
-  // Caso a imagem não seja encontrada, mostra a capa padrão
   imagemIndisponivel(event: Event): void {
     const imagem = event.target as HTMLImageElement;
 
@@ -176,37 +359,72 @@ export class LivrosComponent implements OnInit {
     }
   }
 
+  validarUrlCapa(): void {
+    const url = String(this.formLivro.capaUrl || '').trim();
+
+    if (url && !/^https?:\/\//i.test(url)) {
+      this.formLivro.capaUrl = '';
+
+      if (isPlatformBrowser(this.platformId)) {
+        alert('Informe uma URL iniciada por http:// ou https://.');
+      }
+    }
+  }
+
+  // =====================================================
+  // CADASTRO E EDIÇÃO
+  // =====================================================
+
   novo(): void {
     this.formLivro = {
       id: null,
       titulo: '',
       isbn: '',
       anoPublicacao: new Date().getFullYear(),
-      autorIds: []
+      autorIds: [],
+      capaUrl: ''
     };
 
+    this.autoresSelecionados = [];
+    this.buscaAutor = '';
     this.isEdicao = false;
     this.modoFormulario = true;
+    this.salvando = false;
   }
 
-  editar(l: any): void {
+  editar(livro: any): void {
     this.formLivro = {
-      id: l.id,
-      titulo: l.titulo,
-      isbn: l.isbn,
-      anoPublicacao: l.anoPublicacao,
-      autorIds: (l.autores || []).map((a: any) => a.id)
+      id: livro.id,
+      titulo: livro.titulo,
+      isbn: livro.isbn,
+      anoPublicacao: livro.anoPublicacao,
+      capaUrl: livro.capaUrl || '',
+      autorIds: (livro.autores || [])
+        .map((autor: any) => autor.id)
     };
 
+    this.autoresSelecionados = [...(livro.autores || [])];
+    this.buscaAutor = '';
     this.isEdicao = true;
     this.modoFormulario = true;
+    this.salvando = false;
   }
 
   cancelar(): void {
+    if (this.salvando) {
+      return;
+    }
+
     this.modoFormulario = false;
+    this.autoresSelecionados = [];
+    this.buscaAutor = '';
   }
 
   salvar(): void {
+    if (this.salvando) {
+      return;
+    }
+
     const ids: number[] = this.formLivro.autorIds || [];
 
     if (
@@ -225,23 +443,38 @@ export class LivrosComponent implements OnInit {
       titulo: this.formLivro.titulo.trim(),
       isbn: this.formLivro.isbn.trim(),
       anoPublicacao: Number(this.formLivro.anoPublicacao),
+      capaUrl: this.formLivro.capaUrl?.trim() || null,
       autores: ids.map(id => ({ id }))
     };
 
-    const req = this.isEdicao
+    const requisicao = this.isEdicao
       ? this.api.putItem('livros', this.formLivro.id, payload)
       : this.api.postItem('livros', payload);
 
-    req.subscribe({
+    this.salvando = true;
+
+    requisicao.subscribe({
       next: () => {
+        this.salvando = false;
+
         if (isPlatformBrowser(this.platformId)) {
-          alert('Livro salvo com sucesso!');
+          alert(
+            this.isEdicao
+              ? 'Livro atualizado com sucesso!'
+              : 'Livro cadastrado com sucesso! Estoque inicial de 5 exemplares.'
+          );
         }
 
         this.modoFormulario = false;
+        this.autoresSelecionados = [];
+        this.buscaAutor = '';
+        this.paginaAtual = 1;
         this.carregar();
       },
-      error: e => this.erro('salvar livro', e)
+      error: erro => {
+        this.salvando = false;
+        this.erro('salvar livro', erro);
+      }
     });
   }
 
@@ -250,21 +483,35 @@ export class LivrosComponent implements OnInit {
       ? confirm('Deseja excluir este livro?')
       : true;
 
-    if (confirmar) {
-      this.api.deleteItem('livros', id).subscribe({
-        next: () => this.carregar(),
-        error: e => this.erro('excluir livro', e)
-      });
+    if (!confirmar) {
+      return;
     }
+
+    this.api.deleteItem('livros', id).subscribe({
+      next: () => {
+        if (isPlatformBrowser(this.platformId)) {
+          alert('Livro excluído com sucesso.');
+        }
+
+        this.paginaAtual = 1;
+        this.carregar();
+      },
+      error: erro => this.erro('excluir livro', erro)
+    });
   }
 
-  private erro(acao: string, e: any): void {
-    console.error(`Erro ao ${acao}:`, e);
+  // =====================================================
+  // ERROS
+  // =====================================================
+
+  private erro(acao: string, erro: any): void {
+    console.error(`Erro ao ${acao}:`, erro);
 
     if (isPlatformBrowser(this.platformId)) {
       alert(
-        e?.error?.mensagem ||
-        e?.error?.erro ||
+        erro?.error?.mensagem ||
+        erro?.error?.erro ||
+        erro?.error?.message ||
         `Não foi possível ${acao}. Verifique a API e a chave de acesso.`
       );
     }

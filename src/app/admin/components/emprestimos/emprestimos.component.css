@@ -818,3 +818,148 @@ tbody tr:last-child td {
     padding: 0 8px;
   }
 }
+/* =========================================
+   CONTROLE DE ESTOQUE NOS EMPRÉSTIMOS
+========================================= */
+
+.stock-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.stock-summary div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #f1f5f9;
+  border: 1px solid #e0e8f3;
+  border-radius: 9px;
+}
+
+.stock-summary strong {
+  color: #102344;
+  font-size: 0.95rem;
+}
+
+.stock-summary span {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.stock-indicator {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-top: 5px;
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 0.73rem !important;
+  font-weight: 700;
+}
+
+.stock-available {
+  background: #dcfce7;
+  color: #15803d !important;
+}
+
+.stock-empty {
+  background: #fee2e2;
+  color: #dc2626 !important;
+}
+
+.selection-item.selection-unavailable {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.selection-item.selection-unavailable:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.selection-item:disabled {
+  cursor: not-allowed;
+}
+
+.selection-item:disabled .selection-check {
+  color: #dc2626;
+}
+
+.selected-summary {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* =========================================
+   CANCELAMENTO DE EMPRÉSTIMOS
+========================================= */
+
+.status-cancelado {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.btn-cancelar-emprestimo {
+  min-height: 36px;
+  padding: 0 12px;
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #fecdd3;
+  border-radius: 9px;
+  font-size: 0.76rem;
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancelar-emprestimo:hover {
+  background: #ffe4e6;
+  border-color: #fda4af;
+}
+
+.cancelamento-concluido {
+  display: inline-block;
+  padding: 7px 12px;
+  background: #f1f5f9;
+  color: #64748b;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+/* BOTÃO DESABILITADO */
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* RESPONSIVIDADE */
+@media (max-width: 768px) {
+  .stock-summary {
+    flex-direction: column;
+  }
+
+  .stock-summary div {
+    justify-content: space-between;
+  }
+
+  .selected-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .actions-cell {
+    flex-wrap: wrap;
+  }
+}

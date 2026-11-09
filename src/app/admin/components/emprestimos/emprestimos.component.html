@@ -49,6 +49,7 @@
     <div class="filter-group">
 
       <button
+        type="button"
         class="filter-btn"
         [class.active]="filtroStatus === 'TODOS'"
         (click)="selecionarFiltro('TODOS')">
@@ -57,6 +58,7 @@
       </button>
 
       <button
+        type="button"
         class="filter-btn"
         [class.active]="filtroStatus === 'ATIVO'"
         (click)="selecionarFiltro('ATIVO')">
@@ -65,6 +67,7 @@
       </button>
 
       <button
+        type="button"
         class="filter-btn"
         [class.active]="filtroStatus === 'DEVOLVIDO'"
         (click)="selecionarFiltro('DEVOLVIDO')">
@@ -73,6 +76,7 @@
       </button>
 
       <button
+        type="button"
         class="filter-btn"
         [class.active]="filtroStatus === 'ATRASADO'"
         (click)="selecionarFiltro('ATRASADO')">
@@ -80,9 +84,19 @@
         <span>{{ totalAtrasados }}</span>
       </button>
 
+      <button
+        type="button"
+        class="filter-btn"
+        [class.active]="filtroStatus === 'CANCELADO'"
+        (click)="selecionarFiltro('CANCELADO')">
+        Cancelados
+        <span>{{ totalCancelados }}</span>
+      </button>
+
     </div>
 
     <button
+      type="button"
       class="btn-novo-emprestimo"
       (click)="abrirNovoEmprestimo()">
 
@@ -146,7 +160,8 @@
                 class="badge-status-pill"
                 [class.status-ativo]="obterStatus(emp) === 'ATIVO'"
                 [class.status-devolvido]="obterStatus(emp) === 'DEVOLVIDO'"
-                [class.status-atrasado]="obterStatus(emp) === 'ATRASADO'">
+                [class.status-atrasado]="obterStatus(emp) === 'ATRASADO'"
+                [class.status-cancelado]="obterStatus(emp) === 'CANCELADO'">
 
                 {{ obterStatus(emp) }}
 
@@ -156,7 +171,8 @@
             <td class="actions-cell">
 
               <button
-                *ngIf="emp.status !== 'DEVOLVIDO'"
+                type="button"
+                *ngIf="podeDevolver(emp)"
                 class="btn-registrar-devolucao"
                 (click)="devolver(emp.id)">
 
@@ -178,12 +194,26 @@
 
               </button>
 
+              <button
+                type="button"
+                *ngIf="podeCancelar(emp)"
+                class="btn-cancelar-emprestimo"
+                (click)="cancelar(emp.id)">
+
+                Cancelar
+
+              </button>
+
               <span
-                *ngIf="emp.status === 'DEVOLVIDO'"
+                *ngIf="obterStatus(emp) === 'DEVOLVIDO'"
                 class="devolucao-concluida">
-
                 Devolvido
+              </span>
 
+              <span
+                *ngIf="obterStatus(emp) === 'CANCELADO'"
+                class="cancelamento-concluido">
+                Cancelado
               </span>
 
             </td>
@@ -232,9 +262,7 @@
           class="pagina-btn"
           (click)="irParaPagina(paginaAtual - 1)"
           [disabled]="paginaAtual === 1">
-
           Anterior
-
         </button>
 
         <button
@@ -243,9 +271,7 @@
           *ngFor="let pagina of paginas"
           (click)="irParaPagina(pagina)"
           [class.ativa]="paginaAtual === pagina">
-
           {{ pagina }}
-
         </button>
 
         <button
@@ -253,9 +279,7 @@
           class="pagina-btn"
           (click)="irParaPagina(paginaAtual + 1)"
           [disabled]="paginaAtual === totalPaginas">
-
           Próxima
-
         </button>
 
       </div>
@@ -316,10 +340,11 @@
 
     </div>
 
-    <!-- ETAPA 1 -->
+    <!-- ETAPA 1: USUÁRIO -->
     <div *ngIf="etapaAtual === 1" class="form-step">
 
       <h3>Selecionar usuário</h3>
+
       <p class="form-description">
         Pesquise e selecione o usuário que realizará o empréstimo.
       </p>
@@ -362,7 +387,9 @@
 
         </button>
 
-        <div class="empty-selection" *ngIf="usuariosFiltrados.length === 0">
+        <div
+          class="empty-selection"
+          *ngIf="usuariosFiltrados.length === 0">
           Nenhum usuário encontrado.
         </div>
 
@@ -370,12 +397,13 @@
 
     </div>
 
-    <!-- ETAPA 2 -->
+    <!-- ETAPA 2: LIVRO -->
     <div *ngIf="etapaAtual === 2" class="form-step">
 
       <h3>Selecionar livro</h3>
+
       <p class="form-description">
-        Escolha o livro que será emprestado.
+        Escolha um livro que possua exemplares disponíveis.
       </p>
 
       <div class="search-input-wrapper form-search">
@@ -396,6 +424,22 @@
 
       </div>
 
+      <!-- RESUMO DO ESTOQUE -->
+      <div class="stock-summary" *ngIf="livros.length > 0">
+
+        <div>
+          <strong>{{ livros.length }}</strong>
+          <span>livros cadastrados</span>
+        </div>
+
+        <div>
+          <strong>{{ totalLivrosDisponiveis }}</strong>
+          <span>com exemplares disponíveis</span>
+        </div>
+
+      </div>
+
+      <!-- LISTA DE LIVROS -->
       <div class="selection-list">
 
         <button
@@ -403,20 +447,54 @@
           class="selection-item"
           *ngFor="let livro of livrosFiltrados"
           [class.selected]="livroSelecionado?.id === livro.id"
+          [class.selection-unavailable]="!livroDisponivel(livro)"
+          [disabled]="!livroDisponivel(livro)"
           (click)="selecionarLivro(livro)">
 
           <div class="selection-info">
+
             <strong>{{ livro.titulo }}</strong>
-            <span>ISBN: {{ livro.isbn || 'Não informado' }}</span>
+
+            <span>
+              ISBN: {{ livro.isbn || 'Não informado' }}
+            </span>
+
+            <span
+              class="stock-indicator"
+              [class.stock-available]="livroDisponivel(livro)"
+              [class.stock-empty]="!livroDisponivel(livro)">
+
+              <ng-container *ngIf="livroDisponivel(livro); else semEstoque">
+                {{ obterQuantidadeDisponivel(livro) }}
+                de {{ obterQuantidadeTotal(livro) }}
+                exemplares disponíveis
+              </ng-container>
+
+              <ng-template #semEstoque>
+                Sem exemplares disponíveis
+              </ng-template>
+
+            </span>
+
           </div>
 
           <span class="selection-check">
-            {{ livroSelecionado?.id === livro.id ? 'Selecionado' : 'Selecionar' }}
+
+            <ng-container *ngIf="livroDisponivel(livro); else indisponivel">
+              {{ livroSelecionado?.id === livro.id ? 'Selecionado' : 'Selecionar' }}
+            </ng-container>
+
+            <ng-template #indisponivel>
+              Indisponível
+            </ng-template>
+
           </span>
 
         </button>
 
-        <div class="empty-selection" *ngIf="livrosFiltrados.length === 0">
+        <div
+          class="empty-selection"
+          *ngIf="livrosFiltrados.length === 0">
           Nenhum livro encontrado.
         </div>
 
@@ -424,10 +502,11 @@
 
     </div>
 
-    <!-- ETAPA 3 -->
+    <!-- ETAPA 3: DATAS -->
     <div *ngIf="etapaAtual === 3" class="form-step">
 
       <h3>Definir datas</h3>
+
       <p class="form-description">
         Informe a data de retirada e a previsão de devolução.
       </p>
@@ -442,6 +521,14 @@
         <div>
           <span>Livro selecionado</span>
           <strong>{{ livroSelecionado?.titulo }}</strong>
+        </div>
+
+        <div>
+          <span>Estoque disponível</span>
+          <strong>
+            {{ obterQuantidadeDisponivel(livroSelecionado) }}
+            de {{ obterQuantidadeTotal(livroSelecionado) }} exemplares
+          </strong>
         </div>
 
       </div>
@@ -476,6 +563,7 @@
       <button
         type="button"
         class="btn-secondary"
+        [disabled]="processando"
         (click)="etapaAtual === 1 ? voltarParaLista() : etapaAnterior()">
 
         {{ etapaAtual === 1 ? 'Cancelar' : 'Voltar' }}
@@ -496,9 +584,10 @@
         *ngIf="etapaAtual === 3"
         type="button"
         class="btn-primary"
+        [disabled]="processando || !livroDisponivel(livroSelecionado)"
         (click)="finalizarEmprestimo()">
 
-        Finalizar empréstimo
+        {{ processando ? 'Registrando...' : 'Finalizar empréstimo' }}
 
       </button>
 
@@ -526,6 +615,7 @@
 
     <p>
       O empréstimo foi registrado com sucesso no sistema.
+      O estoque será atualizado conforme o processamento do Back-end.
     </p>
 
     <button

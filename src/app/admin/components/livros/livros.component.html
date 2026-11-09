@@ -1,4 +1,3 @@
-
 <!-- MODO LISTAGEM -->
 <div class="view-container" *ngIf="!modoFormulario">
 
@@ -19,13 +18,70 @@
       </div>
     </div>
 
-    <button class="btn-primary btn-add" (click)="novo()">
+    <button
+      type="button"
+      class="btn-primary btn-add"
+      (click)="novo()">
       <span class="plus-icon">+</span>
       Novo Livro
     </button>
   </div>
 
+  <!-- RESUMO DO ESTOQUE -->
+  <div class="stock-dashboard">
+
+    <div class="stock-card">
+      <div class="stock-card-icon stock-icon-total">
+        <svg width="22" height="22" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+      </div>
+
+      <div>
+        <span>Total de exemplares</span>
+        <strong>{{ totalExemplares }}</strong>
+      </div>
+    </div>
+
+    <div class="stock-card">
+      <div class="stock-card-icon stock-icon-available">
+        <svg width="22" height="22" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </div>
+
+      <div>
+        <span>Disponíveis</span>
+        <strong>{{ totalExemplaresDisponiveis }}</strong>
+      </div>
+    </div>
+
+    <div class="stock-card">
+      <div class="stock-card-icon stock-icon-loaned">
+        <svg width="22" height="22" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 8v4l3 3"></path>
+          <circle cx="12" cy="12" r="10"></circle>
+        </svg>
+      </div>
+
+      <div>
+        <span>Emprestados</span>
+        <strong>{{ totalExemplaresEmprestados }}</strong>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PESQUISA -->
   <div class="top-bar-flex">
+
     <div class="search-input-wrapper">
       <svg class="search-icon" width="19" height="19"
         viewBox="0 0 24 24" fill="none"
@@ -45,13 +101,18 @@
     </div>
 
     <span class="results-count">
-      {{ filtrados.length }} registro(s) encontrado(s)
+      {{ totalRegistros }} registro(s) encontrado(s)
     </span>
+
   </div>
 
+  <!-- TABELA -->
   <div class="table-card">
+
     <div class="table-responsive">
+
       <table>
+
         <thead>
           <tr>
             <th class="id-column">ID</th>
@@ -59,14 +120,19 @@
             <th>TÍTULO</th>
             <th>ISBN</th>
             <th>ANO</th>
+            <th>ESTOQUE</th>
             <th>AUTORES</th>
             <th class="actions-header">AÇÕES</th>
           </tr>
         </thead>
 
         <tbody>
+
           <tr *ngFor="let livro of livrosPaginados">
-            <td class="col-id">{{ livro.id }}</td>
+
+            <td class="col-id">
+              {{ livro.id }}
+            </td>
 
             <td class="capa-cell">
               <img
@@ -77,28 +143,84 @@
               />
             </td>
 
-            <td class="book-title">{{ livro.titulo }}</td>
-
-            <td>
-              <span class="isbn-text">{{ livro.isbn }}</span>
+            <td class="book-title">
+              {{ livro.titulo }}
             </td>
 
-            <td>{{ livro.anoPublicacao }}</td>
+            <td>
+              <span class="isbn-text">
+                {{ livro.isbn }}
+              </span>
+            </td>
 
-            <td>{{ nomeAutores(livro) }}</td>
+            <td>
+              {{ livro.anoPublicacao }}
+            </td>
 
+            <!-- ESTOQUE -->
+            <td class="stock-cell">
+
+              <div class="stock-details">
+
+                <span
+                  class="stock-status"
+                  [class.stock-status-available]="livroDisponivel(livro)"
+                  [class.stock-status-empty]="!livroDisponivel(livro)">
+
+                  {{ obterStatusEstoque(livro) }}
+
+                </span>
+
+                <div class="stock-numbers">
+
+                  <span class="stock-available-number">
+                    {{ obterQuantidadeDisponivel(livro) }}
+                    disponíveis
+                  </span>
+
+                  <span class="stock-total-number">
+                    {{ obterQuantidadeEmprestada(livro) }}
+                    emprestados
+                  </span>
+
+                </div>
+
+                <small class="stock-total">
+                  Total: {{ obterQuantidadeTotal(livro) }} exemplares
+                </small>
+
+              </div>
+
+            </td>
+
+            <td>
+              {{ nomeAutores(livro) }}
+            </td>
+
+            <!-- AÇÕES -->
             <td class="actions-cell">
-              <button class="btn-edit" (click)="editar(livro)">
+
+              <button
+                type="button"
+                class="btn-edit"
+                (click)="editar(livro)">
+
                 <svg width="14" height="14" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 20h9"></path>
                   <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
                 </svg>
+
                 Editar
+
               </button>
 
-              <button class="btn-delete" (click)="excluir(livro.id)">
+              <button
+                type="button"
+                class="btn-delete"
+                (click)="excluir(livro.id)">
+
                 <svg width="14" height="14" viewBox="0 0 24 24"
                   fill="none" stroke="currentColor" stroke-width="2"
                   stroke-linecap="round" stroke-linejoin="round">
@@ -107,18 +229,25 @@
                   <path d="m19 6-1 14H6L5 6"></path>
                   <path d="M10 11v5M14 11v5"></path>
                 </svg>
+
                 Excluir
+
               </button>
+
             </td>
+
           </tr>
 
-          <tr *ngIf="filtrados.length === 0">
-            <td colspan="7" class="empty-row">
+          <tr *ngIf="totalRegistros === 0">
+            <td colspan="8" class="empty-row">
               Nenhum livro encontrado.
             </td>
           </tr>
+
         </tbody>
+
       </table>
+
     </div>
 
     <!-- RODAPÉ E PAGINAÇÃO -->
@@ -126,12 +255,13 @@
 
       <span class="footer-info">
         Mostrando {{ primeiroItem }}–{{ ultimoItem }}
-        de {{ filtrados.length }} registros
+        de {{ totalRegistros }} registros
       </span>
 
       <div class="paginacao" *ngIf="totalPaginas > 1">
 
         <button
+          type="button"
           class="pagina-btn"
           [disabled]="paginaAtual === 1"
           (click)="irParaPagina(paginaAtual - 1)">
@@ -139,6 +269,7 @@
         </button>
 
         <button
+          type="button"
           *ngFor="let pagina of paginas"
           class="pagina-btn"
           [class.ativa]="paginaAtual === pagina"
@@ -147,6 +278,7 @@
         </button>
 
         <button
+          type="button"
           class="pagina-btn"
           [disabled]="paginaAtual === totalPaginas"
           (click)="irParaPagina(paginaAtual + 1)">
@@ -154,7 +286,9 @@
         </button>
 
       </div>
+
     </div>
+
   </div>
 
 </div>
@@ -164,7 +298,9 @@
 <div class="wizard-container" *ngIf="modoFormulario">
 
   <div class="header-flex">
+
     <div class="page-title-flex">
+
       <div class="title-icon-box">
         <svg width="28" height="28" viewBox="0 0 24 24"
           fill="none" stroke="currentColor" stroke-width="2"
@@ -176,90 +312,213 @@
 
       <div>
         <h2>{{ isEdicao ? 'Editar Livro' : 'Novo Livro' }}</h2>
-        <p class="subtitle">Informe os dados bibliográficos e vincule os autores.</p>
+        <p class="subtitle">
+          Informe os dados bibliográficos e vincule os autores.
+        </p>
       </div>
+
     </div>
 
-    <button class="btn-secondary" (click)="cancelar()">
+    <button
+      type="button"
+      class="btn-secondary"
+      [disabled]="salvando"
+      (click)="cancelar()">
       Voltar para a Lista
     </button>
+
   </div>
 
   <div class="wizard-card">
 
     <div class="form-section-title">
       <h3>Informações do Livro</h3>
-      <p>Preencha os campos abaixo para cadastrar o livro no acervo.</p>
+      <p>
+        Preencha os campos abaixo para cadastrar o livro no acervo.
+      </p>
     </div>
 
     <div class="form-step">
 
       <div class="form-group">
-        <label for="titulo">Título do livro <span>*</span></label>
+
+        <label for="titulo">
+          Título do livro <span>*</span>
+        </label>
+
         <input
           id="titulo"
           type="text"
           [(ngModel)]="formLivro.titulo"
           placeholder="Ex: Dom Casmurro"
         />
+
       </div>
 
       <div class="form-row">
+
         <div class="form-group">
-          <label for="isbn">ISBN <span>*</span></label>
+
+          <label for="isbn">
+            ISBN <span>*</span>
+          </label>
+
           <input
             id="isbn"
             type="text"
             [(ngModel)]="formLivro.isbn"
             placeholder="Ex: 978-8535902778"
           />
+
         </div>
 
         <div class="form-group">
-          <label for="ano">Ano de publicação <span>*</span></label>
+
+          <label for="ano">
+            Ano de publicação <span>*</span>
+          </label>
+
           <input
             id="ano"
             type="number"
             [(ngModel)]="formLivro.anoPublicacao"
             placeholder="Ex: 1899"
           />
+
         </div>
+
       </div>
 
+      <!-- CAPA -->
       <div class="form-group">
-        <label for="autores">Autores <span>*</span></label>
 
-        <select
-          id="autores"
-          multiple
-          [(ngModel)]="formLivro.autorIds"
-          class="authors-select"
-        >
-          <option *ngFor="let autor of autores" [ngValue]="autor.id">
-            {{ autor.nome }}
-          </option>
-        </select>
+        <label for="capaUrl">
+          URL da capa do livro
+        </label>
 
-        <small *ngIf="autores.length > 0">
-          Segure Ctrl (Windows) ou Command (Mac) para selecionar mais de um autor.
+        <input
+          id="capaUrl"
+          type="url"
+          [(ngModel)]="formLivro.capaUrl"
+          (blur)="validarUrlCapa()"
+          placeholder="https://exemplo.com/imagem-do-livro.jpg"
+        />
+
+        <small>
+          Cole o endereço público da imagem. A prévia aparecerá abaixo.
         </small>
 
-        <small class="warning-text" *ngIf="autores.length === 0">
+        <div class="capa-preview" *ngIf="formLivro.capaUrl">
+
+          <img
+            [src]="formLivro.capaUrl"
+            alt="Prévia da capa do livro"
+            (error)="$any($event.target).style.display='none'"
+            (load)="$any($event.target).style.display='block'"
+          />
+
+        </div>
+
+      </div>
+
+      <!-- AUTORES -->
+      <div class="form-group">
+
+        <label for="buscaAutor">
+          Pesquisar autores <span>*</span>
+        </label>
+
+        <div class="author-search">
+
+          <input
+            id="buscaAutor"
+            type="text"
+            [(ngModel)]="buscaAutor"
+            placeholder="Digite o nome do autor..."
+            autocomplete="off"
+          />
+
+          <div
+            class="author-suggestions"
+            *ngIf="autoresSugeridos.length > 0">
+
+            <button
+              type="button"
+              class="author-suggestion"
+              *ngFor="let autor of autoresSugeridos"
+              (click)="selecionarAutor(autor)">
+
+              {{ autor.nome }}
+
+            </button>
+
+          </div>
+
+        </div>
+
+        <div
+          class="selected-authors"
+          *ngIf="autoresSelecionados.length > 0">
+
+          <span
+            class="author-chip"
+            *ngFor="let autor of autoresSelecionados">
+
+            {{ autor.nome }}
+
+            <button
+              type="button"
+              aria-label="Remover autor"
+              (click)="removerAutor(autor.id)">
+              ×
+            </button>
+
+          </span>
+
+        </div>
+
+        <small
+          *ngIf="autores.length === 0"
+          class="warning-text">
           Cadastre um autor antes de cadastrar o livro.
         </small>
+
+        <small
+          *ngIf="autores.length > 0 && autoresSelecionados.length === 0">
+          Digite para pesquisar e selecione um ou mais autores sugeridos.
+        </small>
+
       </div>
 
+      <!-- AÇÕES -->
       <div class="form-actions">
-        <button class="btn-secondary" (click)="cancelar()">
+
+        <button
+          type="button"
+          class="btn-secondary"
+          [disabled]="salvando"
+          (click)="cancelar()">
           Cancelar
         </button>
 
-        <button class="btn-success" (click)="salvar()">
-          {{ isEdicao ? 'Salvar Alterações' : 'Concluir Cadastro' }}
+        <button
+          type="button"
+          class="btn-success"
+          [disabled]="salvando"
+          (click)="salvar()">
+
+          {{
+            salvando
+              ? 'Salvando...'
+              : (isEdicao ? 'Salvar Alterações' : 'Concluir Cadastro')
+          }}
+
         </button>
+
       </div>
 
     </div>
+
   </div>
 
 </div>

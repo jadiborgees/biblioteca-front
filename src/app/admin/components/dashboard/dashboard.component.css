@@ -828,3 +828,101 @@ tbody td strong {
     font-size: 1.1rem;
   }
 }
+
+
+/* ===== DASHBOARD MAIS COMPACTO ===== */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  min-height: 130px;
+  padding: 18px 20px;
+  border-radius: 18px;
+}
+
+.stat-top {
+  gap: 10px;
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+}
+
+.stat-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.stat-label {
+  font-size: 11px;
+}
+
+.stat-number {
+  font-size: 30px;
+  line-height: 1.1;
+  margin-top: 12px;
+}
+
+.stat-description {
+  font-size: 11px;
+  margin-top: 5px;
+}
+
+.decoration {
+  font-size: 48px;
+  opacity: 0.12;
+}
+
+/* Indicadores de estoque mais discretos */
+.stats-grid .stat-card:nth-child(n + 5) {
+  min-height: 105px;
+  padding: 14px 18px;
+}
+
+.stats-grid .stat-card:nth-child(n + 5) .stat-icon {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+}
+
+.stats-grid .stat-card:nth-child(n + 5) .stat-number {
+  font-size: 25px;
+  margin-top: 8px;
+}
+
+.stats-grid .stat-card:nth-child(n + 5) .decoration {
+  font-size: 38px;
+}
+
+/* Gráficos */
+.charts-grid {
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+/* Responsividade */
+@media (max-width: 1100px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .stat-card,
+  .stats-grid .stat-card:nth-child(n + 5) {
+    min-height: 100px;
+  }
+}
+

@@ -1,4 +1,3 @@
-
 <!-- LISTAGEM DE USUÁRIOS -->
 <div class="view-container" *ngIf="!modoFormulario">
 
@@ -87,21 +86,34 @@
 
           <tr *ngFor="let u of usuariosPaginados">
 
-            <td class="col-id">{{ u.id }}</td>
+            <td class="col-id">
+              {{ u.id }}
+            </td>
 
-            <td class="col-bold">{{ u.nome }}</td>
+            <td class="col-bold">
+              {{ u.nome }}
+            </td>
 
-            <td>{{ u.email }}</td>
+            <td>
+              {{ u.email }}
+            </td>
 
-            <td>{{ u.telefone }}</td>
+            <td>
+              {{ u.telefone }}
+            </td>
 
-            <td>{{ u.dataNascimento }}</td>
+            <td>
+              {{ u.dataNascimento }}
+            </td>
 
-            <td>{{ u.endereco?.cidade || '—' }}</td>
+            <td>
+              {{ u.endereco?.cidade || '—' }}
+            </td>
 
             <td class="actions-cell">
 
               <button class="btn-edit" (click)="abrirEdicao(u)">
+
                 <svg xmlns="http://www.w3.org/2000/svg"
                      width="14" height="14"
                      viewBox="0 0 24 24"
@@ -113,10 +125,13 @@
                   <path d="M12 20h9"/>
                   <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/>
                 </svg>
+
                 Editar
+
               </button>
 
               <button class="btn-delete" (click)="excluirUsuario(u.id)">
+
                 <svg xmlns="http://www.w3.org/2000/svg"
                      width="14" height="14"
                      viewBox="0 0 24 24"
@@ -130,13 +145,16 @@
                   <path d="m19 6-1 14H6L5 6"/>
                   <path d="M10 11v5M14 11v5"/>
                 </svg>
+
                 Excluir
+
               </button>
 
             </td>
 
           </tr>
 
+          <!-- LISTA VAZIA -->
           <tr *ngIf="usuariosFiltrados.length === 0">
             <td colspan="7" class="empty-row">
               Nenhum usuário encontrado.
@@ -153,6 +171,7 @@
     <div class="table-footer">
 
       <div class="footer-info">
+
         <svg xmlns="http://www.w3.org/2000/svg"
              width="17" height="17"
              viewBox="0 0 24 24"
@@ -169,6 +188,7 @@
         Mostrando {{ primeiroItem }}–{{ ultimoItem }} de
         {{ usuariosFiltrados.length }}
         {{ usuariosFiltrados.length === 1 ? 'usuário' : 'usuários' }}
+
       </div>
 
       <div class="paginacao" *ngIf="totalPaginas > 1">
@@ -211,6 +231,7 @@
   <div class="page-title-flex">
 
     <div class="title-icon-box">
+
       <svg xmlns="http://www.w3.org/2000/svg"
            width="30" height="30"
            viewBox="0 0 24 24"
@@ -224,10 +245,12 @@
         <path d="M20 21v-2a4 4 0 0 0-3-3.87"/>
         <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
       </svg>
+
     </div>
 
     <div>
       <h2>{{ isEdicao ? 'Editar Usuário' : 'Novo Usuário' }}</h2>
+
       <p class="subtitle">
         Preencha os dados pessoais e o endereço residencial.
       </p>
@@ -240,31 +263,44 @@
 
     <!-- INFORMAÇÕES PESSOAIS -->
     <div class="form-section-title">
+
       <h3>Informações Pessoais</h3>
+
       <p>Dados de identificação e contato do usuário.</p>
+
     </div>
 
     <div class="form-step">
 
       <!-- NOME -->
       <div class="form-group">
-        <label>Nome Completo <span>*</span></label>
+
+        <label>
+          Nome Completo <span>*</span>
+        </label>
 
         <input
+          type="text"
           [(ngModel)]="formUsuario.nome"
           (ngModelChange)="limparErro('nome')"
           [class.input-erro]="errosCampo['nome']"
           placeholder="Ex: Maria Silva"
         />
 
-        <small class="mensagem-erro" *ngIf="errosCampo['nome']">
+        <small
+          class="mensagem-erro"
+          *ngIf="errosCampo['nome']">
           {{ errosCampo['nome'] }}
         </small>
+
       </div>
 
       <!-- E-MAIL -->
       <div class="form-group">
-        <label>E-mail <span>*</span></label>
+
+        <label>
+          E-mail <span>*</span>
+        </label>
 
         <input
           type="email"
@@ -275,18 +311,25 @@
           placeholder="exemplo@email.com"
         />
 
-        <small class="mensagem-erro" *ngIf="errosCampo['email']">
+        <small
+          class="mensagem-erro"
+          *ngIf="errosCampo['email']">
           {{ errosCampo['email'] }}
         </small>
+
       </div>
 
       <div class="form-row">
 
         <!-- TELEFONE -->
         <div class="form-group">
-          <label>Telefone <span>*</span></label>
+
+          <label>
+            Telefone <span>*</span>
+          </label>
 
           <input
+            type="text"
             [(ngModel)]="formUsuario.telefone"
             (input)="aplicarMascaraTelefone(); limparErro('telefone')"
             [class.input-erro]="errosCampo['telefone']"
@@ -294,14 +337,20 @@
             placeholder="(11) 99999-8888"
           />
 
-          <small class="mensagem-erro" *ngIf="errosCampo['telefone']">
+          <small
+            class="mensagem-erro"
+            *ngIf="errosCampo['telefone']">
             {{ errosCampo['telefone'] }}
           </small>
+
         </div>
 
         <!-- DATA DE NASCIMENTO -->
         <div class="form-group">
-          <label>Data de Nascimento <span>*</span></label>
+
+          <label>
+            Data de Nascimento <span>*</span>
+          </label>
 
           <input
             type="date"
@@ -310,43 +359,75 @@
             [class.input-erro]="errosCampo['dataNascimento']"
           />
 
-          <small class="mensagem-erro" *ngIf="errosCampo['dataNascimento']">
+          <small
+            class="mensagem-erro"
+            *ngIf="errosCampo['dataNascimento']">
             {{ errosCampo['dataNascimento'] }}
           </small>
+
         </div>
 
       </div>
 
       <!-- ENDEREÇO -->
       <div class="form-section-title address-section-title">
+
         <h3>Endereço Residencial</h3>
+
         <p>Informações sobre o endereço do usuário.</p>
+
       </div>
 
       <div class="form-row">
 
         <!-- CEP -->
         <div class="form-group">
-          <label>CEP <span>*</span></label>
+
+          <label>
+            CEP <span>*</span>
+          </label>
 
           <input
+            type="text"
             [(ngModel)]="formUsuario.endereco.cep"
-            (input)="aplicarMascaraCep(); limparErro('cep')"
+            (input)="aplicarMascaraCep()"
             [class.input-erro]="errosCampo['cep']"
             maxlength="9"
             placeholder="00000-000"
           />
 
-          <small class="mensagem-erro" *ngIf="errosCampo['cep']">
+          <!-- ERRO DO CEP -->
+          <small
+            class="mensagem-erro"
+            *ngIf="errosCampo['cep']">
             {{ errosCampo['cep'] }}
           </small>
+
+          <!-- CONSULTANDO CEP -->
+          <small
+            class="mensagem-consulta"
+            *ngIf="cepConsultando">
+            Consultando CEP...
+          </small>
+
+          <!-- CEP CONSULTADO -->
+          <small
+            class="mensagem-sucesso"
+            *ngIf="!cepConsultando && ultimoCepConsultado && !errosCampo['cep']">
+            CEP consultado. Confira os dados do endereço.
+          </small>
+
         </div>
 
         <!-- ESTADO -->
         <div class="form-group">
-          <label>Estado <span>*</span></label>
+
+          <label>
+            Estado <span>*</span>
+          </label>
 
           <input
+            type="text"
             [(ngModel)]="formUsuario.endereco.estado"
             (ngModelChange)="limparErro('estado')"
             [class.input-erro]="errosCampo['estado']"
@@ -354,55 +435,75 @@
             placeholder="SP"
           />
 
-          <small class="mensagem-erro" *ngIf="errosCampo['estado']">
+          <small
+            class="mensagem-erro"
+            *ngIf="errosCampo['estado']">
             {{ errosCampo['estado'] }}
           </small>
+
         </div>
 
       </div>
 
       <!-- LOGRADOURO -->
       <div class="form-group">
-        <label>Logradouro <span>*</span></label>
+
+        <label>
+          Logradouro <span>*</span>
+        </label>
 
         <input
+          type="text"
           [(ngModel)]="formUsuario.endereco.logradouro"
           (ngModelChange)="limparErro('logradouro')"
           [class.input-erro]="errosCampo['logradouro']"
           placeholder="Rua, Avenida..."
         />
 
-        <small class="mensagem-erro" *ngIf="errosCampo['logradouro']">
+        <small
+          class="mensagem-erro"
+          *ngIf="errosCampo['logradouro']">
           {{ errosCampo['logradouro'] }}
         </small>
+
       </div>
 
       <div class="form-row">
 
         <!-- NÚMERO -->
         <div class="form-group">
-          <label>Número <span>*</span></label>
+
+          <label>
+            Número <span>*</span>
+          </label>
 
           <input
+            type="text"
             [(ngModel)]="formUsuario.endereco.numero"
             (ngModelChange)="limparErro('numero')"
             [class.input-erro]="errosCampo['numero']"
             placeholder="123"
           />
 
-          <small class="mensagem-erro" *ngIf="errosCampo['numero']">
+          <small
+            class="mensagem-erro"
+            *ngIf="errosCampo['numero']">
             {{ errosCampo['numero'] }}
           </small>
+
         </div>
 
         <!-- COMPLEMENTO -->
         <div class="form-group">
+
           <label>Complemento</label>
 
           <input
+            type="text"
             [(ngModel)]="formUsuario.endereco.complemento"
             placeholder="Apto, Bloco..."
           />
+
         </div>
 
       </div>
@@ -411,51 +512,73 @@
 
         <!-- BAIRRO -->
         <div class="form-group">
-          <label>Bairro <span>*</span></label>
+
+          <label>
+            Bairro <span>*</span>
+          </label>
 
           <input
+            type="text"
             [(ngModel)]="formUsuario.endereco.bairro"
             (ngModelChange)="limparErro('bairro')"
             [class.input-erro]="errosCampo['bairro']"
             placeholder="Bairro"
           />
 
-          <small class="mensagem-erro" *ngIf="errosCampo['bairro']">
+          <small
+            class="mensagem-erro"
+            *ngIf="errosCampo['bairro']">
             {{ errosCampo['bairro'] }}
           </small>
+
         </div>
 
         <!-- CIDADE -->
         <div class="form-group">
-          <label>Cidade <span>*</span></label>
+
+          <label>
+            Cidade <span>*</span>
+          </label>
 
           <input
+            type="text"
             [(ngModel)]="formUsuario.endereco.cidade"
             (ngModelChange)="limparErro('cidade')"
             [class.input-erro]="errosCampo['cidade']"
             placeholder="Cidade"
           />
 
-          <small class="mensagem-erro" *ngIf="errosCampo['cidade']">
+          <small
+            class="mensagem-erro"
+            *ngIf="errosCampo['cidade']">
             {{ errosCampo['cidade'] }}
           </small>
+
         </div>
 
       </div>
 
       <!-- ERRO GERAL DA API -->
-      <div class="erro-geral" *ngIf="errosCampo['geral']">
+      <div
+        class="erro-geral"
+        *ngIf="errosCampo['geral']">
         {{ errosCampo['geral'] }}
       </div>
 
       <!-- BOTÕES -->
       <div class="form-actions">
 
-        <button class="btn-secondary" (click)="voltarParaLista()">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="voltarParaLista()">
           Cancelar
         </button>
 
-        <button class="btn-success" (click)="salvarUsuario()">
+        <button
+          type="button"
+          class="btn-success"
+          (click)="salvarUsuario()">
           {{ isEdicao ? 'Salvar Alterações' : 'Concluir Cadastro' }}
         </button>
 

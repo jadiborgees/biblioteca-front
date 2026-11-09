@@ -591,3 +591,63 @@ button {
     font-size: 0.78rem;
   }
 }
+
+/* =====================================================
+   FORMULÁRIO DE USUÁRIOS CENTRALIZADO
+===================================================== */
+
+/* Oculta o cabeçalho externo somente no formulário */
+.wizard-container > .page-title-flex {
+  display: none;
+}
+
+/* Centraliza o formulário */
+.wizard-container {
+  width: 100%;
+  min-height: calc(100vh - 104px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 35px 28px;
+  box-sizing: border-box;
+}
+
+/* Card centralizado */
+.wizard-container > .wizard-card {
+  width: 100%;
+  max-width: 850px;
+  margin: 20px auto;
+  background: #ffffff;
+  border: 1px solid #e0e8f3;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 15px rgba(15, 35, 68, 0.06);
+  box-sizing: border-box;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .wizard-container {
+    padding: 20px 16px;
+  }
+
+  .wizard-container > .wizard-card {
+    padding: 22px 18px;
+    margin: 10px auto;
+  }
+}
+
+.mensagem-consulta {
+  display: block;
+  margin-top: 6px;
+  color: #2563eb;
+  font-size: 0.78rem;
+}
+
+.mensagem-sucesso {
+  display: block;
+  margin-top: 6px;
+  color: #16a34a;
+  font-size: 0.78rem;
+}

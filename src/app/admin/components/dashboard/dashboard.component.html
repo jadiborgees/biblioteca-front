@@ -36,6 +36,7 @@
     <!-- INDICADORES -->
     <section class="stats-grid">
 
+      <!-- LIVROS CADASTRADOS -->
       <article class="stat-card books-card">
         <div class="stat-top">
           <div class="stat-icon blue-icon">
@@ -48,11 +49,13 @@
           </div>
           <span class="stat-label">LIVROS CADASTRADOS</span>
         </div>
+
         <div class="stat-number">{{ totalLivros }}</div>
         <span class="stat-description">Total de livros no acervo</span>
         <div class="decoration book-decoration">▤</div>
       </article>
 
+      <!-- AUTORES -->
       <article class="stat-card authors-card">
         <div class="stat-top">
           <div class="stat-icon purple-icon">
@@ -65,11 +68,13 @@
           </div>
           <span class="stat-label">AUTORES REGISTRADOS</span>
         </div>
+
         <div class="stat-number">{{ totalAutores }}</div>
         <span class="stat-description">Autores no catálogo</span>
         <div class="decoration feather-decoration">✦</div>
       </article>
 
+      <!-- USUÁRIOS -->
       <article class="stat-card users-card">
         <div class="stat-top">
           <div class="stat-icon green-icon">
@@ -80,11 +85,13 @@
           </div>
           <span class="stat-label">USUÁRIOS CADASTRADOS</span>
         </div>
+
         <div class="stat-number">{{ totalUsuarios }}</div>
         <span class="stat-description">Usuários cadastrados</span>
         <div class="decoration users-decoration">♧</div>
       </article>
 
+      <!-- EMPRÉSTIMOS REGISTRADOS -->
       <article class="stat-card loans-card">
         <div class="stat-top">
           <div class="stat-icon orange-icon">
@@ -97,9 +104,61 @@
           </div>
           <span class="stat-label">EMPRÉSTIMOS REGISTRADOS</span>
         </div>
+
         <div class="stat-number">{{ totalEmprestimos }}</div>
         <span class="stat-description">Total de empréstimos</span>
         <div class="decoration loans-decoration">⇄</div>
+      </article>
+
+      <!-- TOTAL DE EXEMPLARES -->
+      <article class="stat-card books-card">
+        <div class="stat-top">
+          <div class="stat-icon blue-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </div>
+          <span class="stat-label">TOTAL DE EXEMPLARES</span>
+        </div>
+
+        <div class="stat-number">{{ totalExemplares }}</div>
+        <span class="stat-description">Exemplares no acervo</span>
+        <div class="decoration book-decoration">▤</div>
+      </article>
+
+      <!-- EXEMPLARES DISPONÍVEIS -->
+      <article class="stat-card users-card">
+        <div class="stat-top">
+          <div class="stat-icon green-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12l4 4L19 6"></path>
+            </svg>
+          </div>
+          <span class="stat-label">EXEMPLARES DISPONÍVEIS</span>
+        </div>
+
+        <div class="stat-number">{{ exemplaresDisponiveis }}</div>
+        <span class="stat-description">Disponíveis para empréstimo</span>
+      </article>
+
+      <!-- EXEMPLARES EMPRESTADOS -->
+      <article class="stat-card loans-card">
+        <div class="stat-top">
+          <div class="stat-icon orange-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="M12 6v6l4 2"></path>
+            </svg>
+          </div>
+          <span class="stat-label">EXEMPLARES EMPRESTADOS</span>
+        </div>
+
+        <div class="stat-number">{{ exemplaresEmprestados }}</div>
+        <span class="stat-description">Fora do acervo disponível</span>
       </article>
 
     </section>
@@ -107,6 +166,7 @@
     <!-- GRÁFICOS -->
     <section class="charts-grid">
 
+      <!-- EMPRÉSTIMOS POR MÊS -->
       <article class="panel chart-panel">
         <div class="panel-heading">
           <div class="heading-icon">
@@ -116,6 +176,7 @@
               <rect x="14" y="5" width="3" height="13" rx="1"></rect>
             </svg>
           </div>
+
           <div>
             <h3>Empréstimos por mês</h3>
             <p>Movimentação dos últimos 6 meses</p>
@@ -138,18 +199,21 @@
               <div class="bar-value" *ngIf="mes.quantidade > 0">
                 {{ mes.quantidade }}
               </div>
+
               <div class="bar-track">
                 <div class="bar"
                   [class.bar-highlight]="mes.destaque"
                   [style.height.%]="alturaBarra(mes.quantidade)">
                 </div>
               </div>
+
               <span class="bar-label">{{ mes.nome }}</span>
             </div>
           </div>
         </div>
       </article>
 
+      <!-- STATUS DOS EMPRÉSTIMOS -->
       <article class="panel status-panel">
         <div class="panel-heading">
           <div class="heading-icon">
@@ -159,6 +223,7 @@
               <path d="M12 3v9l6.4 6.4"></path>
             </svg>
           </div>
+
           <div>
             <h3>Status dos empréstimos</h3>
             <p>Distribuição atual dos registros</p>
@@ -219,6 +284,7 @@
                 <path d="M12 6v6l4 2"></path>
               </svg>
             </div>
+
             <div>
               <h3>Últimos empréstimos</h3>
               <p>Registros mais recentes do sistema</p>
@@ -247,8 +313,13 @@
                 <td>
                   <strong>{{ emp.usuario?.nome || 'Usuário' }}</strong>
                 </td>
+
                 <td>{{ emp.livro?.titulo || 'Livro' }}</td>
-                <td>{{ formatarData(emp.dataEmprestimo || emp.dataRetirada) }}</td>
+
+                <td>
+                  {{ formatarData(emp.dataEmprestimo || emp.dataRetirada) }}
+                </td>
+
                 <td>
                   <span class="status-badge"
                     [ngClass]="{
@@ -275,11 +346,14 @@
       <article class="action-card">
         <div class="action-content">
           <span class="action-eyebrow">BIBLIOTECA ADMIN</span>
+
           <h3>Gerencie sua biblioteca de forma simples e eficiente.</h3>
+
           <p>
             Cadastre livros, autores e usuários e acompanhe
             os empréstimos em um só lugar.
           </p>
+
           <a routerLink="/admin/livros" class="action-button">
             <span>+</span>
             Cadastrar novo livro
@@ -291,12 +365,15 @@
             <path d="M25 112L130 112L151 126L45 126Z" fill="#4338CA"/>
             <path d="M25 112L25 92L130 92L130 112Z" fill="#6366F1"/>
             <path d="M130 92L151 105V126L130 112Z" fill="#3730A3"/>
+
             <path d="M42 83L145 83L165 97L62 97Z" fill="#F59E0B"/>
             <path d="M42 83L42 63L145 63L145 83Z" fill="#FBBF24"/>
             <path d="M145 63L165 77V97L145 83Z" fill="#D97706"/>
+
             <path d="M15 55L110 55L130 69L35 69Z" fill="#4F46E5"/>
             <path d="M15 55L15 35L110 35L110 55Z" fill="#818CF8"/>
             <path d="M110 35L130 49V69L110 55Z" fill="#4338CA"/>
+
             <path d="M100 20L118 8L136 20" stroke="#8B5CF6" stroke-width="5" stroke-linecap="round"/>
             <path d="M120 29L145 19" stroke="#8B5CF6" stroke-width="5" stroke-linecap="round"/>
           </svg>
