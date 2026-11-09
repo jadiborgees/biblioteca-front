@@ -4,7 +4,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'https://biblioteca-api-10lf.onrender.com';
 
 export interface LoginRequest {
   email: string;

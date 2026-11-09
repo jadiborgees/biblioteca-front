@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-const API_URL = 'http://localhost:8080';
+const API_URL = 'https://biblioteca-api-10lf.onrender.com';
 
 export interface PaginaResponse<T> {
   conteudo: T[];
