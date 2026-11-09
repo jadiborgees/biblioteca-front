@@ -1,4 +1,3 @@
-
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -19,15 +18,21 @@ export class LoginComponent {
   erro = '';
   carregando = false;
 
+  mostrarSenha = false;
+
   constructor(
     private authService: AuthService,
     private router: Router
   ) {}
 
+  alternarVisibilidadeSenha(): void {
+    this.mostrarSenha = !this.mostrarSenha;
+  }
+
   entrar(): void {
     this.erro = '';
 
-    if (!this.email || !this.senha) {
+    if (!this.email.trim() || !this.senha) {
       this.erro = 'Preencha o e-mail e a senha.';
       return;
     }
@@ -44,6 +49,7 @@ export class LoginComponent {
       },
       error: (erro) => {
         this.carregando = false;
+
         this.erro = erro.status === 401
           ? 'E-mail ou senha incorretos.'
           : 'Não foi possível realizar o login. Tente novamente.';
