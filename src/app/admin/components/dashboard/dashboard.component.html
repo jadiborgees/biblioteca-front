@@ -1,21 +1,34 @@
-
 <div class="dashboard">
 
   <!-- CABEÇALHO -->
   <header class="dashboard-header">
-    <div class="header-left">
-      <div class="main-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
-      </div>
+    <div class="header-text">
+      <h1>Painel administrativo</h1>
+      <p>
+        <span class="data-atual">{{ dataFormatada }}</span>
+        <span class="dot-sep" *ngIf="ultimaAtualizacao"></span>
+        <span *ngIf="ultimaAtualizacao">Atualizado às {{ ultimaAtualizacao }}</span>
+      </p>
+    </div>
 
-      <div>
-        <h1>Painel Administrativo</h1>
-        <p>Resumo geral do sistema da biblioteca em tempo real.</p>
-      </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-ghost" (click)="atualizarDashboard()"
+        [disabled]="carregando || atualizando">
+        <svg [class.girando]="atualizando" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-3-6.7"></path>
+          <path d="M21 4v5h-5"></path>
+        </svg>
+        {{ atualizando ? 'Atualizando...' : 'Atualizar' }}
+      </button>
+
+      <a routerLink="/admin/livros" class="btn btn-primary">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14M5 12h14"></path>
+        </svg>
+        Novo livro
+      </a>
     </div>
   </header>
 
@@ -26,140 +39,125 @@
   </div>
 
   <!-- ERRO -->
-  <div class="error-state" *ngIf="erroCarregamento">
-    <span>Não foi possível carregar os dados do Dashboard.</span>
-    <button (click)="atualizarDashboard()">Tentar novamente</button>
+  <div class="error-state" *ngIf="erroCarregamento" role="alert">
+    <span>Não foi possível carregar os dados do painel. Verifique se a API está no ar.</span>
+    <button type="button" (click)="atualizarDashboard()">Tentar novamente</button>
   </div>
 
-  <ng-container *ngIf="!carregando && !erroCarregamento">
+  <ng-container *ngIf="carregado">
 
     <!-- INDICADORES -->
-    <section class="stats-grid">
+    <section class="kpi-grid" aria-label="Indicadores">
 
-      <!-- LIVROS CADASTRADOS -->
-      <article class="stat-card books-card">
-        <div class="stat-top">
-          <div class="stat-icon blue-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 7v14"></path>
-              <path d="M3 18V5a2 2 0 0 1 2-2h3a4 4 0 0 1 4 4"></path>
-              <path d="M12 7a4 4 0 0 1 4-4h3a2 2 0 0 1 2 2v13"></path>
-              <path d="M3 18a2 2 0 0 0 2 2h3a4 4 0 0 1 4 4"></path>
-            </svg>
-          </div>
-          <span class="stat-label">LIVROS CADASTRADOS</span>
-        </div>
+      <a class="kpi" routerLink="/admin/livros">
+        <span class="kpi-icon tone-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </span>
+        <span class="kpi-body">
+          <span class="kpi-label">Livros</span>
+          <strong class="kpi-value">{{ totalLivros }}</strong>
+        </span>
+      </a>
 
-        <div class="stat-number">{{ totalLivros }}</div>
-        <span class="stat-description">Total de livros no acervo</span>
-        <div class="decoration book-decoration">▤</div>
-      </article>
+      <a class="kpi" routerLink="/admin/autores">
+        <span class="kpi-icon tone-purple">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+          </svg>
+        </span>
+        <span class="kpi-body">
+          <span class="kpi-label">Autores</span>
+          <strong class="kpi-value">{{ totalAutores }}</strong>
+        </span>
+      </a>
 
-      <!-- AUTORES -->
-      <article class="stat-card authors-card">
-        <div class="stat-top">
-          <div class="stat-icon purple-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="9" cy="8" r="4"></circle>
-              <path d="M3 21v-2a6 6 0 0 1 12 0v2"></path>
-              <path d="M16 4.5a4 4 0 0 1 0 7.5"></path>
-              <path d="M21 21v-2a6 6 0 0 0-4-5.65"></path>
-            </svg>
-          </div>
-          <span class="stat-label">AUTORES REGISTRADOS</span>
-        </div>
+      <a class="kpi" routerLink="/admin/usuarios">
+        <span class="kpi-icon tone-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="8" r="4"></circle>
+            <path d="M2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1"></path>
+            <path d="M17 11a3 3 0 1 0 0-6"></path>
+            <path d="M22 21v-1a5 5 0 0 0-3-4.6"></path>
+          </svg>
+        </span>
+        <span class="kpi-body">
+          <span class="kpi-label">Usuários</span>
+          <strong class="kpi-value">{{ totalUsuarios }}</strong>
+        </span>
+      </a>
 
-        <div class="stat-number">{{ totalAutores }}</div>
-        <span class="stat-description">Autores no catálogo</span>
-        <div class="decoration feather-decoration">✦</div>
-      </article>
+      <a class="kpi" routerLink="/admin/emprestimos">
+        <span class="kpi-icon tone-amber">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3l4 4-4 4"></path>
+            <path d="M3 7h18"></path>
+            <path d="M7 21l-4-4 4-4"></path>
+            <path d="M21 17H3"></path>
+          </svg>
+        </span>
+        <span class="kpi-body">
+          <span class="kpi-label">Empréstimos</span>
+          <span class="kpi-line">
+            <strong class="kpi-value">{{ totalEmprestimos }}</strong>
+            <span class="trend" *ngIf="variacaoMensal !== null"
+              [class.trend-up]="variacaoMensal > 0"
+              [class.trend-down]="variacaoMensal < 0"
+              title="Variação do mês atual em relação ao mês anterior">
+              {{ variacaoMensal > 0 ? '+' : '' }}{{ variacaoMensal }}%
+            </span>
+          </span>
+        </span>
+      </a>
 
-      <!-- USUÁRIOS -->
-      <article class="stat-card users-card">
-        <div class="stat-top">
-          <div class="stat-icon green-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="8" r="4"></circle>
-              <path d="M5 21v-2a7 7 0 0 1 14 0v2"></path>
-            </svg>
-          </div>
-          <span class="stat-label">USUÁRIOS CADASTRADOS</span>
-        </div>
+      <!-- Em atraso: filtra a tabela -->
+      <button type="button" class="kpi kpi-button"
+        [class.kpi-alerta]="totalAtrasados > 0"
+        [class.kpi-selecionado]="filtroStatus === 'ATRASADO'"
+        (click)="alternarFiltro('ATRASADO'); tabela.scrollIntoView({ behavior: 'smooth', block: 'start' })"
+        title="Filtrar empréstimos em atraso">
+        <span class="kpi-icon tone-coral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 6v6l4 2"></path>
+          </svg>
+        </span>
+        <span class="kpi-body">
+          <span class="kpi-label">Em atraso</span>
+          <strong class="kpi-value">{{ totalAtrasados }}</strong>
+        </span>
+      </button>
 
-        <div class="stat-number">{{ totalUsuarios }}</div>
-        <span class="stat-description">Usuários cadastrados</span>
-        <div class="decoration users-decoration">♧</div>
-      </article>
-
-      <!-- EMPRÉSTIMOS REGISTRADOS -->
-      <article class="stat-card loans-card">
-        <div class="stat-top">
-          <div class="stat-icon orange-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 3l4 4-4 4"></path>
-              <path d="M3 7h18"></path>
-              <path d="M7 21l-4-4 4-4"></path>
-              <path d="M21 17H3"></path>
-            </svg>
-          </div>
-          <span class="stat-label">EMPRÉSTIMOS REGISTRADOS</span>
-        </div>
-
-        <div class="stat-number">{{ totalEmprestimos }}</div>
-        <span class="stat-description">Total de empréstimos</span>
-        <div class="decoration loans-decoration">⇄</div>
-      </article>
-
-      <!-- TOTAL DE EXEMPLARES -->
-      <article class="stat-card books-card">
-        <div class="stat-top">
-          <div class="stat-icon blue-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-            </svg>
-          </div>
-          <span class="stat-label">TOTAL DE EXEMPLARES</span>
-        </div>
-
-        <div class="stat-number">{{ totalExemplares }}</div>
-        <span class="stat-description">Exemplares no acervo</span>
-        <div class="decoration book-decoration">▤</div>
-      </article>
-
-      <!-- EXEMPLARES DISPONÍVEIS -->
-      <article class="stat-card users-card">
-        <div class="stat-top">
-          <div class="stat-icon green-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 12l4 4L19 6"></path>
-            </svg>
-          </div>
-          <span class="stat-label">EXEMPLARES DISPONÍVEIS</span>
-        </div>
-
-        <div class="stat-number">{{ exemplaresDisponiveis }}</div>
-        <span class="stat-description">Disponíveis para empréstimo</span>
-      </article>
-
-      <!-- EXEMPLARES EMPRESTADOS -->
-      <article class="stat-card loans-card">
-        <div class="stat-top">
-          <div class="stat-icon orange-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 6v6l4 2"></path>
-            </svg>
-          </div>
-          <span class="stat-label">EXEMPLARES EMPRESTADOS</span>
-        </div>
-
-        <div class="stat-number">{{ exemplaresEmprestados }}</div>
-        <span class="stat-description">Fora do acervo disponível</span>
-      </article>
+      <!-- Estoque -->
+      <div class="kpi kpi-estoque">
+        <span class="kpi-icon tone-teal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 8l-9-5-9 5 9 5 9-5z"></path>
+            <path d="M3 8v8l9 5 9-5V8"></path>
+          </svg>
+        </span>
+        <span class="kpi-body">
+          <span class="kpi-label">Exemplares disponíveis</span>
+          <span class="kpi-line">
+            <strong class="kpi-value">{{ exemplaresDisponiveis }}</strong>
+            <span class="kpi-de">de {{ totalExemplares }}</span>
+          </span>
+          <span class="meter" role="progressbar" [attr.aria-valuenow]="percentualDisponivel | number:'1.0-0'"
+            aria-valuemin="0" aria-valuemax="100">
+            <span class="meter-fill" [style.width.%]="percentualDisponivel"></span>
+          </span>
+          <span class="kpi-nota">{{ exemplaresEmprestados }} emprestados</span>
+        </span>
+      </div>
 
     </section>
 
@@ -167,26 +165,25 @@
     <section class="charts-grid">
 
       <!-- EMPRÉSTIMOS POR MÊS -->
-      <article class="panel chart-panel">
-        <div class="panel-heading">
-          <div class="heading-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 3v18h18"></path>
-              <rect x="7" y="10" width="3" height="8" rx="1"></rect>
-              <rect x="14" y="5" width="3" height="13" rx="1"></rect>
-            </svg>
-          </div>
-
+      <article class="panel">
+        <div class="panel-head">
           <div>
             <h3>Empréstimos por mês</h3>
-            <p>Movimentação dos últimos 6 meses</p>
+            <p>{{ totalPeriodo }} {{ totalPeriodo === 1 ? 'empréstimo' : 'empréstimos' }} nos últimos {{ periodoMeses }} meses</p>
+          </div>
+
+          <div class="segmented" role="group" aria-label="Período do gráfico">
+            <button type="button" *ngFor="let p of periodosDisponiveis"
+              [class.ativo]="periodoMeses === p" (click)="definirPeriodo(p)">
+              {{ p }}m
+            </button>
           </div>
         </div>
 
         <div class="chart-area">
           <div class="chart-y-labels">
             <span>{{ maxEmprestimos }}</span>
-            <span>{{ (maxEmprestimos / 2) | number:'1.0-0' }}</span>
+            <span>{{ eixoMeio }}</span>
             <span>0</span>
           </div>
 
@@ -196,14 +193,16 @@
             <div class="chart-grid-line line-bottom"></div>
 
             <div class="bar-item" *ngFor="let mes of meses">
-              <div class="bar-value" *ngIf="mes.quantidade > 0">
-                {{ mes.quantidade }}
-              </div>
+              <div class="bar-value">{{ mes.quantidade > 0 ? mes.quantidade : '' }}</div>
 
               <div class="bar-track">
-                <div class="bar"
-                  [class.bar-highlight]="mes.destaque"
+                <div class="bar" [class.bar-highlight]="mes.destaque"
                   [style.height.%]="alturaBarra(mes.quantidade)">
+                  <span class="bar-tooltip">
+                    {{ mes.nomeCompleto }}<br>
+                    <strong>{{ mes.quantidade }}</strong>
+                    {{ mes.quantidade === 1 ? 'empréstimo' : 'empréstimos' }}
+                  </span>
                 </div>
               </div>
 
@@ -214,87 +213,95 @@
       </article>
 
       <!-- STATUS DOS EMPRÉSTIMOS -->
-      <article class="panel status-panel">
-        <div class="panel-heading">
-          <div class="heading-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 12a9 9 0 1 1-9-9"></path>
-              <path d="M21 3v9h-9"></path>
-              <path d="M12 3v9l6.4 6.4"></path>
-            </svg>
-          </div>
-
+      <article class="panel">
+        <div class="panel-head">
           <div>
             <h3>Status dos empréstimos</h3>
-            <p>Distribuição atual dos registros</p>
+            <p>Clique para filtrar a tabela</p>
           </div>
         </div>
 
         <div class="status-content">
-          <div class="donut-wrapper">
-            <div class="donut-chart"
-              [style.background]="
-                totalEmprestimos === 0
-                ? '#e8edf5'
-                : 'conic-gradient(#16b978 0% ' + percentualAtivos + '%, #f59e0b ' + percentualAtivos + '% ' + (percentualAtivos + percentualAtrasados) + '%, #9254f5 ' + (percentualAtivos + percentualAtrasados) + '% 100%)'
-              ">
-              <div class="donut-center">
-                <strong>{{ totalEmprestimos }}</strong>
-                <span>Total</span>
-              </div>
+          <div class="donut-chart" [style.background]="gradienteDonut">
+            <div class="donut-center">
+              <strong>{{ totalEmprestimos }}</strong>
+              <span>Total</span>
             </div>
           </div>
 
           <div class="status-legend">
-            <div class="legend-item">
+            <button type="button" class="legend-item"
+              [class.selecionado]="filtroStatus === 'ATIVO'"
+              (click)="alternarFiltro('ATIVO')">
               <span class="legend-dot active-dot"></span>
               <span class="legend-name">Ativos</span>
               <strong>{{ totalAtivos }}</strong>
               <span class="legend-percent">{{ percentualAtivos | number:'1.0-0' }}%</span>
-            </div>
+            </button>
 
-            <div class="legend-item">
+            <button type="button" class="legend-item"
+              [class.selecionado]="filtroStatus === 'ATRASADO'"
+              (click)="alternarFiltro('ATRASADO')">
               <span class="legend-dot late-dot"></span>
               <span class="legend-name">Atrasados</span>
               <strong>{{ totalAtrasados }}</strong>
               <span class="legend-percent">{{ percentualAtrasados | number:'1.0-0' }}%</span>
-            </div>
+            </button>
 
-            <div class="legend-item">
+            <button type="button" class="legend-item"
+              [class.selecionado]="filtroStatus === 'DEVOLVIDO'"
+              (click)="alternarFiltro('DEVOLVIDO')">
               <span class="legend-dot returned-dot"></span>
               <span class="legend-name">Devolvidos</span>
               <strong>{{ totalDevolvidos }}</strong>
               <span class="legend-percent">{{ percentualDevolvidos | number:'1.0-0' }}%</span>
-            </div>
+            </button>
           </div>
         </div>
       </article>
 
     </section>
 
-    <!-- ÚLTIMOS EMPRÉSTIMOS -->
+    <!-- TABELA + LATERAL -->
     <section class="bottom-grid">
 
-      <article class="panel recent-panel">
-        <div class="recent-heading">
-          <div class="panel-heading">
-            <div class="heading-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M12 6v6l4 2"></path>
-              </svg>
-            </div>
-
-            <div>
-              <h3>Últimos empréstimos</h3>
-              <p>Registros mais recentes do sistema</p>
-            </div>
+      <!-- EMPRÉSTIMOS -->
+      <article class="panel" #tabela>
+        <div class="panel-head">
+          <div>
+            <h3>Empréstimos</h3>
+            <p>Registros mais recentes do sistema</p>
           </div>
 
-          <a routerLink="/admin/emprestimos" class="view-all">
-            Ver todos
-            <span>→</span>
+          <a routerLink="/admin/emprestimos" class="link-action">
+            Gerenciar
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
           </a>
+        </div>
+
+        <div class="toolbar">
+          <div class="chips" role="group" aria-label="Filtrar por status">
+            <button type="button" class="chip" *ngFor="let f of filtros"
+              [class.ativo]="filtroStatus === f.valor" (click)="definirFiltro(f.valor)">
+              {{ f.rotulo }}
+              <span class="chip-count">{{ contagem(f.valor) }}</span>
+            </button>
+          </div>
+
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"></circle>
+              <path d="M21 21l-4.3-4.3"></path>
+            </svg>
+            <input type="text" placeholder="Buscar usuário ou livro" [value]="busca"
+              (input)="busca = $any($event.target).value" />
+            <button type="button" class="search-clear" *ngIf="busca" (click)="limparBusca()"
+              aria-label="Limpar busca">×</button>
+          </label>
         </div>
 
         <div class="table-responsive">
@@ -303,82 +310,99 @@
               <tr>
                 <th>Usuário</th>
                 <th>Livro</th>
-                <th>Data</th>
+                <th>Retirada</th>
+                <th>Devolução prevista</th>
                 <th>Status</th>
               </tr>
             </thead>
 
             <tbody>
-              <tr *ngFor="let emp of ultimosEmprestimos">
-                <td>
-                  <strong>{{ emp.usuario?.nome || 'Usuário' }}</strong>
-                </td>
-
+              <tr *ngFor="let emp of emprestimosVisiveis">
+                <td class="cell-strong">{{ emp.usuario?.nome || 'Usuário' }}</td>
                 <td>{{ emp.livro?.titulo || 'Livro' }}</td>
-
-                <td>
-                  {{ formatarData(emp.dataEmprestimo || emp.dataRetirada) }}
-                </td>
-
+                <td class="cell-muted">{{ formatarData(emp.dataEmprestimo || emp.dataRetirada) }}</td>
+                <td class="cell-muted">{{ formatarData(emp.dataDevolucaoPrevista || emp.dataDevolucao) }}</td>
                 <td>
                   <span class="status-badge"
                     [ngClass]="{
                       'badge-active': obterStatus(emp) === 'ATIVO',
                       'badge-late': obterStatus(emp) === 'ATRASADO',
-                      'badge-returned': obterStatus(emp) === 'DEVOLVIDO'
+                      'badge-returned': obterStatus(emp) === 'DEVOLVIDO',
+                      'badge-cancelled': obterStatus(emp) === 'CANCELADO'
                     }">
-                    {{ obterStatus(emp) }}
+                    {{ obterStatus(emp) === 'ATIVO' ? 'Ativo'
+                      : obterStatus(emp) === 'ATRASADO' ? 'Atrasado'
+                      : obterStatus(emp) === 'DEVOLVIDO' ? 'Devolvido'
+                      : obterStatus(emp) === 'CANCELADO' ? 'Cancelado'
+                      : obterStatus(emp) }}
                   </span>
                 </td>
               </tr>
 
-              <tr *ngIf="ultimosEmprestimos.length === 0">
-                <td colspan="4" class="empty-table">
-                  Nenhum empréstimo registrado.
+              <tr *ngIf="emprestimosFiltrados.length === 0">
+                <td colspan="5" class="empty-table">
+                  {{ busca || filtroStatus !== 'TODOS'
+                    ? 'Nenhum empréstimo encontrado com esses filtros.'
+                    : 'Nenhum empréstimo registrado.' }}
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+
+        <div class="table-footer" *ngIf="emprestimosFiltrados.length > limite">
+          <span>Exibindo {{ emprestimosVisiveis.length }} de {{ emprestimosFiltrados.length }}</span>
+          <button type="button" (click)="mostrarTodos = !mostrarTodos">
+            {{ mostrarTodos ? 'Mostrar menos' : 'Mostrar todos' }}
+          </button>
+        </div>
       </article>
 
-      <!-- CARD DE AÇÃO -->
-      <article class="action-card">
-        <div class="action-content">
-          <span class="action-eyebrow">BIBLIOTECA ADMIN</span>
+      <!-- COLUNA LATERAL -->
+      <div class="side-column">
 
-          <h3>Gerencie sua biblioteca de forma simples e eficiente.</h3>
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Atenção: em atraso</h3>
+              <p>Maiores atrasos primeiro</p>
+            </div>
+          </div>
 
-          <p>
-            Cadastre livros, autores e usuários e acompanhe
-            os empréstimos em um só lugar.
+          <ul class="late-list" *ngIf="listaAtrasados.length > 0">
+            <li *ngFor="let item of listaAtrasados">
+              <div class="late-info">
+                <strong>{{ item.emp.usuario?.nome || 'Usuário' }}</strong>
+                <span>{{ item.emp.livro?.titulo || 'Livro' }}</span>
+              </div>
+              <span class="late-days">
+                {{ item.dias > 0 ? item.dias + (item.dias === 1 ? ' dia' : ' dias') : 'Atrasado' }}
+              </span>
+            </li>
+          </ul>
+
+          <p class="empty-note" *ngIf="listaAtrasados.length === 0">
+            Nenhum empréstimo em atraso. Tudo em dia.
           </p>
+        </article>
 
-          <a routerLink="/admin/livros" class="action-button">
-            <span>+</span>
-            Cadastrar novo livro
-          </a>
-        </div>
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <h3>Atalhos</h3>
+              <p>Ações mais usadas</p>
+            </div>
+          </div>
 
-        <div class="action-illustration">
-          <svg viewBox="0 0 180 150" fill="none">
-            <path d="M25 112L130 112L151 126L45 126Z" fill="#4338CA"/>
-            <path d="M25 112L25 92L130 92L130 112Z" fill="#6366F1"/>
-            <path d="M130 92L151 105V126L130 112Z" fill="#3730A3"/>
+          <div class="shortcuts">
+            <a routerLink="/admin/livros" class="shortcut">Cadastrar livro</a>
+            <a routerLink="/admin/autores" class="shortcut">Cadastrar autor</a>
+            <a routerLink="/admin/usuarios" class="shortcut">Cadastrar usuário</a>
+            <a routerLink="/admin/emprestimos" class="shortcut">Novo empréstimo</a>
+          </div>
+        </article>
 
-            <path d="M42 83L145 83L165 97L62 97Z" fill="#F59E0B"/>
-            <path d="M42 83L42 63L145 63L145 83Z" fill="#FBBF24"/>
-            <path d="M145 63L165 77V97L145 83Z" fill="#D97706"/>
-
-            <path d="M15 55L110 55L130 69L35 69Z" fill="#4F46E5"/>
-            <path d="M15 55L15 35L110 35L110 55Z" fill="#818CF8"/>
-            <path d="M110 35L130 49V69L110 55Z" fill="#4338CA"/>
-
-            <path d="M100 20L118 8L136 20" stroke="#8B5CF6" stroke-width="5" stroke-linecap="round"/>
-            <path d="M120 29L145 19" stroke="#8B5CF6" stroke-width="5" stroke-linecap="round"/>
-          </svg>
-        </div>
-      </article>
+      </div>
 
     </section>
 

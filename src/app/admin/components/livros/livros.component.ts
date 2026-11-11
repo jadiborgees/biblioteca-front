@@ -1,7 +1,15 @@
-import { Component, OnInit, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, OnInit, Inject, PLATFORM_ID, HostListener } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../services/api.service';
+
+type FiltroEstoque = 'todos' | 'disponiveis' | 'esgotados';
+type Ordenacao = 'titulo' | 'ano' | 'disponiveis';
+
+interface Toast {
+  mensagem: string;
+  tipo: 'sucesso' | 'erro';
+}
 
 @Component({
   selector: 'app-livros',
@@ -12,26 +20,45 @@ import { ApiService } from '../../../services/api.service';
 })
 export class LivrosComponent implements OnInit {
 
-  livros: any[] = [];
+  // ===== DADOS =====
   todosLivros: any[] = [];
+  listaFiltrada: any[] = [];
   autores: any[] = [];
+  carregando = false;
 
+  // ===== LISTAGEM =====
   termoBusca = '';
-  buscaAutor = '';
-  autoresSelecionados: any[] = [];
+  filtroEstoque: FiltroEstoque = 'todos';
+  ordenacao: Ordenacao = 'titulo';
+  itensPorPagina = 10;
+  paginaAtual = 1;
+  readonly opcoesPorPagina = [10, 20, 50];
+  readonly skeletonLinhas = [1, 2, 3, 4, 5];
+  readonly filtros: { valor: FiltroEstoque; rotulo: string }[] = [
+    { valor: 'todos', rotulo: 'Todos' },
+    { valor: 'disponiveis', rotulo: 'Disponíveis' },
+    { valor: 'esgotados', rotulo: 'Esgotados' }
+  ];
 
+  // ===== FORMULÁRIO =====
   modoFormulario = false;
   isEdicao = false;
   salvando = false;
-  carregando = false;
+  tentouSalvar = false;
+  capaComErro = false;
+  erros: Record<string, string> = {};
+  formLivro: any = this.criarFormularioVazio();
+  autoresSelecionados: any[] = [];
+  buscaAutor = '';
 
-  itensPorPagina = 10;
-  paginaAtual = 1;
-  totalElementosBackend = 0;
-  totalPaginasBackend = 0;
+  // ===== EXCLUSÃO E FEEDBACK =====
+  livroParaExcluir: any = null;
+  excluindo = false;
+  toast: Toast | null = null;
+  private toastTimer: any;
 
   private readonly pastaCapas = '/image/livros/';
-
+  private readonly capaPadrao = '/image/livros/capa-padrao.jpg';
   private readonly capasLivros: { [titulo: string]: string } = {
     'a hora da estrela': 'a-hora-da-estrela.jpg',
     'capitães da areia': 'capitaes-da-areia.jpg',
@@ -50,55 +77,37 @@ export class LivrosComponent implements OnInit {
     'romanceiro da inconfidência': 'romanceiro-da-inconfidencia.jpg'
   };
 
-  formLivro: any = {
-    id: null,
-    titulo: '',
-    isbn: '',
-    anoPublicacao: new Date().getFullYear(),
-    capaUrl: '',
-    autorIds: []
-  };
-
   constructor(
     private api: ApiService,
     @Inject(PLATFORM_ID) private platformId: Object
   ) {}
 
   ngOnInit(): void {
-    this.carregar();
+    this.carregarLivros();
     this.carregarAutores();
+  }
+
+  @HostListener('document:keydown.escape')
+  aoPressionarEsc(): void {
+    if (this.livroParaExcluir) {
+      this.cancelarExclusao();
+    } else if (this.modoFormulario) {
+      this.cancelar();
+    }
   }
 
   // =====================================================
   // CARREGAMENTO
   // =====================================================
 
-  carregar(): void {
-    this.carregarPagina();
-    this.carregarCatalogoAuxiliar();
-  }
-
-  private carregarPagina(): void {
+  carregarLivros(): void {
     this.carregando = true;
 
-    this.api.getPagina<any>(
-      'livros',
-      this.paginaAtual - 1,
-      this.itensPorPagina
-    ).subscribe({
-      next: resposta => {
-        this.livros = resposta?.conteudo || [];
-        this.totalElementosBackend = Number(resposta?.totalElementos || 0);
-        this.totalPaginasBackend = Number(resposta?.totalPaginas || 0);
+    this.api.getLista('livros').subscribe({
+      next: dados => {
+        this.todosLivros = dados || [];
         this.carregando = false;
-
-        if (
-          this.totalPaginasBackend > 0 &&
-          this.paginaAtual > this.totalPaginasBackend
-        ) {
-          this.paginaAtual = this.totalPaginasBackend;
-          this.carregarPagina();
-        }
+        this.atualizarLista();
       },
       error: erro => {
         this.carregando = false;
@@ -107,20 +116,9 @@ export class LivrosComponent implements OnInit {
     });
   }
 
-  private carregarCatalogoAuxiliar(): void {
-    this.api.getLista('livros').subscribe({
-      next: dados => {
-        this.todosLivros = dados || [];
-      },
-      error: erro => this.erro('carregar catálogo de livros', erro)
-    });
-  }
-
   carregarAutores(): void {
     this.api.getLista('autores').subscribe({
-      next: dados => {
-        this.autores = dados || [];
-      },
+      next: dados => this.autores = dados || [],
       error: erro => this.erro('carregar autores', erro)
     });
   }
@@ -140,200 +138,196 @@ export class LivrosComponent implements OnInit {
   }
 
   obterQuantidadeEmprestada(livro: any): number {
-    return Math.max(
-      0,
-      this.obterQuantidadeTotal(livro) -
-      this.obterQuantidadeDisponivel(livro)
-    );
+    return Math.max(0, this.obterQuantidadeTotal(livro) - this.obterQuantidadeDisponivel(livro));
   }
 
   livroDisponivel(livro: any): boolean {
     return this.obterQuantidadeDisponivel(livro) > 0;
   }
 
-  obterStatusEstoque(livro: any): string {
-    return this.livroDisponivel(livro) ? 'DISPONÍVEL' : 'ESGOTADO';
+  percentualDisponivel(livro: any): number {
+    const total = this.obterQuantidadeTotal(livro);
+    return total > 0 ? Math.round((this.obterQuantidadeDisponivel(livro) / total) * 100) : 0;
+  }
+
+  get totalTitulos(): number {
+    return this.todosLivros.length;
   }
 
   get totalExemplares(): number {
-    return this.todosLivros.reduce(
-      (total, livro) =>
-        total + this.obterQuantidadeTotal(livro),
-      0
-    );
+    return this.todosLivros.reduce((t, l) => t + this.obterQuantidadeTotal(l), 0);
   }
 
   get totalExemplaresDisponiveis(): number {
-    return this.todosLivros.reduce(
-      (total, livro) =>
-        total + this.obterQuantidadeDisponivel(livro),
-      0
-    );
+    return this.todosLivros.reduce((t, l) => t + this.obterQuantidadeDisponivel(l), 0);
   }
 
   get totalExemplaresEmprestados(): number {
-    return this.todosLivros.reduce(
-      (total, livro) =>
-        total + this.obterQuantidadeEmprestada(livro),
-      0
-    );
+    return this.todosLivros.reduce((t, l) => t + this.obterQuantidadeEmprestada(l), 0);
   }
 
-  // =====================================================
-  // PESQUISA
-  // =====================================================
-
-  get filtrados(): any[] {
-    const q = this.termoBusca.trim().toLocaleLowerCase('pt-BR');
-
-    if (!q) {
-      return this.todosLivros;
+  contagem(filtro: FiltroEstoque): number {
+    if (filtro === 'disponiveis') {
+      return this.todosLivros.filter(l => this.livroDisponivel(l)).length;
     }
-
-    return this.todosLivros.filter(livro => {
-      const valores = [
-        livro.titulo,
-        livro.isbn,
-        String(livro.id),
-        ...(livro.autores || []).map((autor: any) => autor.nome)
-      ];
-
-      return valores.some(valor =>
-        String(valor || '')
-          .toLocaleLowerCase('pt-BR')
-          .includes(q)
-      );
-    });
+    if (filtro === 'esgotados') {
+      return this.todosLivros.filter(l => !this.livroDisponivel(l)).length;
+    }
+    return this.todosLivros.length;
   }
 
-  atualizarPesquisa(): void {
+  // =====================================================
+  // BUSCA, FILTRO E ORDENAÇÃO
+  // =====================================================
+
+  atualizarLista(): void {
+    const termo = this.normalizar(this.termoBusca);
+
+    this.listaFiltrada = this.todosLivros
+      .filter(livro =>
+        this.passaFiltroEstoque(livro) &&
+        (!termo || this.textoBusca(livro).includes(termo))
+      )
+      .sort((a, b) => this.comparar(a, b));
+
+    this.garantirPaginaValida();
+  }
+
+  aoAlterarFiltro(): void {
     this.paginaAtual = 1;
+    this.atualizarLista();
+  }
 
-    if (!this.termoBusca.trim()) {
-      this.carregarPagina();
+  definirFiltro(filtro: FiltroEstoque): void {
+    this.filtroEstoque = filtro;
+    this.aoAlterarFiltro();
+  }
+
+  limparBusca(): void {
+    this.termoBusca = '';
+    this.aoAlterarFiltro();
+  }
+
+  limparFiltros(): void {
+    this.termoBusca = '';
+    this.filtroEstoque = 'todos';
+    this.aoAlterarFiltro();
+  }
+
+  private passaFiltroEstoque(livro: any): boolean {
+    switch (this.filtroEstoque) {
+      case 'disponiveis': return this.livroDisponivel(livro);
+      case 'esgotados': return !this.livroDisponivel(livro);
+      default: return true;
     }
+  }
+
+  private comparar(a: any, b: any): number {
+    switch (this.ordenacao) {
+      case 'ano':
+        return Number(b.anoPublicacao) - Number(a.anoPublicacao);
+      case 'disponiveis':
+        return this.obterQuantidadeDisponivel(b) - this.obterQuantidadeDisponivel(a);
+      default:
+        return String(a.titulo || '').localeCompare(String(b.titulo || ''), 'pt-BR');
+    }
+  }
+
+  private textoBusca(livro: any): string {
+    const autores = (livro.autores || []).map((autor: any) => autor.nome).join(' ');
+    return this.normalizar(`${livro.titulo} ${livro.isbn} ${livro.id} ${autores}`);
+  }
+
+  private normalizar(texto: string): string {
+    return String(texto || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 
   // =====================================================
   // PAGINAÇÃO
   // =====================================================
 
-  get livrosPaginados(): any[] {
-    if (!this.termoBusca.trim()) {
-      return this.livros;
-    }
-
-    const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
-
-    return this.filtrados.slice(
-      inicio,
-      inicio + this.itensPorPagina
-    );
-  }
-
-  get totalRegistros(): number {
-    return this.termoBusca.trim()
-      ? this.filtrados.length
-      : this.totalElementosBackend;
-  }
-
   get totalPaginas(): number {
-    return this.termoBusca.trim()
-      ? Math.ceil(this.filtrados.length / this.itensPorPagina)
-      : this.totalPaginasBackend;
+    return Math.max(1, Math.ceil(this.listaFiltrada.length / this.itensPorPagina));
   }
 
-  get paginas(): number[] {
-    return Array.from(
-      { length: this.totalPaginas },
-      (_, indice) => indice + 1
-    );
+  get livrosPaginados(): any[] {
+    const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
+    return this.listaFiltrada.slice(inicio, inicio + this.itensPorPagina);
+  }
+
+  get paginasVisiveis(): number[] {
+    const total = this.totalPaginas;
+    const inicio = Math.max(1, Math.min(this.paginaAtual - 2, total - 4));
+    const fim = Math.min(total, inicio + 4);
+
+    return Array.from({ length: fim - inicio + 1 }, (_, i) => inicio + i);
   }
 
   get primeiroItem(): number {
-    return this.totalRegistros === 0
-      ? 0
-      : (this.paginaAtual - 1) * this.itensPorPagina + 1;
+    return this.listaFiltrada.length === 0 ? 0 : (this.paginaAtual - 1) * this.itensPorPagina + 1;
   }
 
   get ultimoItem(): number {
-    return Math.min(
-      this.paginaAtual * this.itensPorPagina,
-      this.totalRegistros
-    );
+    return Math.min(this.paginaAtual * this.itensPorPagina, this.listaFiltrada.length);
   }
 
   irParaPagina(pagina: number): void {
-    if (
-      pagina < 1 ||
-      pagina > this.totalPaginas ||
-      pagina === this.paginaAtual
-    ) {
+    if (pagina < 1 || pagina > this.totalPaginas || pagina === this.paginaAtual) {
       return;
     }
-
     this.paginaAtual = pagina;
+  }
 
-    if (!this.termoBusca.trim()) {
-      this.carregarPagina();
+  alterarItensPorPagina(valor: string): void {
+    this.itensPorPagina = Number(valor);
+    this.paginaAtual = 1;
+  }
+
+  private garantirPaginaValida(): void {
+    if (this.paginaAtual > this.totalPaginas) {
+      this.paginaAtual = this.totalPaginas;
     }
   }
 
-    // =====================================================
+  // =====================================================
   // AUTORES
   // =====================================================
 
   nomeAutores(livro: any): string {
-    return (livro.autores || [])
-      .map((autor: any) => autor.nome)
-      .join(', ') || '—';
+    return (livro.autores || []).map((autor: any) => autor.nome).join(', ') || '—';
   }
 
   get autoresSugeridos(): any[] {
-    const termo = this.buscaAutor.trim().toLocaleLowerCase('pt-BR');
-
+    const termo = this.normalizar(this.buscaAutor);
     if (!termo) {
       return [];
     }
 
-    const selecionados = new Set(
-      this.autoresSelecionados.map(autor => autor.id)
-    );
+    const selecionados = new Set(this.autoresSelecionados.map(a => a.id));
 
     return this.autores
       .filter(autor =>
         !selecionados.has(autor.id) &&
-        String(autor.nome || '')
-          .toLocaleLowerCase('pt-BR')
-          .includes(termo)
+        this.normalizar(autor.nome).includes(termo)
       )
-      .slice(0, 8);
+      .slice(0, 6);
   }
 
   selecionarAutor(autor: any): void {
-    if (
-      !this.autoresSelecionados.some(
-        selecionado => selecionado.id === autor.id
-      )
-    ) {
-      this.autoresSelecionados = [
-        ...this.autoresSelecionados,
-        autor
-      ];
-
-      this.formLivro.autorIds =
-        this.autoresSelecionados.map(item => item.id);
+    if (!this.autoresSelecionados.some(a => a.id === autor.id)) {
+      this.autoresSelecionados = [...this.autoresSelecionados, autor];
     }
-
     this.buscaAutor = '';
+    this.tentouSalvar && this.validarFormulario();
   }
 
   removerAutor(id: number): void {
-    this.autoresSelecionados =
-      this.autoresSelecionados.filter(autor => autor.id !== id);
-
-    this.formLivro.autorIds =
-      this.autoresSelecionados.map(autor => autor.id);
+    this.autoresSelecionados = this.autoresSelecionados.filter(a => a.id !== id);
+    this.tentouSalvar && this.validarFormulario();
   }
 
   // =====================================================
@@ -341,34 +335,24 @@ export class LivrosComponent implements OnInit {
   // =====================================================
 
   obterCapa(livro: any): string {
-    const titulo = (livro?.titulo || '').trim().toLowerCase();
-    const arquivo = this.capasLivros[titulo];
+    if (livro?.capaUrl?.trim()) {
+      return livro.capaUrl.trim();
+    }
 
-    return livro?.capaUrl?.trim() || (
-      arquivo
-        ? this.pastaCapas + arquivo
-        : '/image/livros/capa-padrao.jpg'
-    );
+    const titulo = this.normalizarTitulo(livro?.titulo);
+    const arquivo = this.capasLivros[titulo];
+    return arquivo ? this.pastaCapas + arquivo : this.capaPadrao;
   }
 
   imagemIndisponivel(event: Event): void {
     const imagem = event.target as HTMLImageElement;
-
     if (!imagem.src.endsWith('/capa-padrao.jpg')) {
-      imagem.src = '/image/livros/capa-padrao.jpg';
+      imagem.src = this.capaPadrao;
     }
   }
 
-  validarUrlCapa(): void {
-    const url = String(this.formLivro.capaUrl || '').trim();
-
-    if (url && !/^https?:\/\//i.test(url)) {
-      this.formLivro.capaUrl = '';
-
-      if (isPlatformBrowser(this.platformId)) {
-        alert('Informe uma URL iniciada por http:// ou https://.');
-      }
-    }
+  private normalizarTitulo(titulo: string): string {
+    return String(titulo || '').trim().toLowerCase();
   }
 
   // =====================================================
@@ -376,20 +360,8 @@ export class LivrosComponent implements OnInit {
   // =====================================================
 
   novo(): void {
-    this.formLivro = {
-      id: null,
-      titulo: '',
-      isbn: '',
-      anoPublicacao: new Date().getFullYear(),
-      autorIds: [],
-      capaUrl: ''
-    };
-
-    this.autoresSelecionados = [];
-    this.buscaAutor = '';
-    this.isEdicao = false;
-    this.modoFormulario = true;
-    this.salvando = false;
+    this.formLivro = this.criarFormularioVazio();
+    this.abrirFormulario(false);
   }
 
   editar(livro: any): void {
@@ -398,26 +370,17 @@ export class LivrosComponent implements OnInit {
       titulo: livro.titulo,
       isbn: livro.isbn,
       anoPublicacao: livro.anoPublicacao,
-      capaUrl: livro.capaUrl || '',
-      autorIds: (livro.autores || [])
-        .map((autor: any) => autor.id)
+      capaUrl: livro.capaUrl || ''
     };
-
     this.autoresSelecionados = [...(livro.autores || [])];
-    this.buscaAutor = '';
-    this.isEdicao = true;
-    this.modoFormulario = true;
-    this.salvando = false;
+    this.abrirFormulario(true);
   }
 
   cancelar(): void {
     if (this.salvando) {
       return;
     }
-
-    this.modoFormulario = false;
-    this.autoresSelecionados = [];
-    this.buscaAutor = '';
+    this.fecharFormulario();
   }
 
   salvar(): void {
@@ -425,26 +388,18 @@ export class LivrosComponent implements OnInit {
       return;
     }
 
-    const ids: number[] = this.formLivro.autorIds || [];
+    this.tentouSalvar = true;
 
-    if (
-      !this.formLivro.titulo?.trim() ||
-      !this.formLivro.isbn?.trim() ||
-      !this.formLivro.anoPublicacao ||
-      ids.length === 0
-    ) {
-      if (isPlatformBrowser(this.platformId)) {
-        alert('Preencha os dados e selecione pelo menos um autor.');
-      }
+    if (!this.validarFormulario()) {
       return;
     }
 
     const payload = {
       titulo: this.formLivro.titulo.trim(),
-      isbn: this.formLivro.isbn.trim(),
+      isbn: this.isbnLimpo(this.formLivro.isbn),
       anoPublicacao: Number(this.formLivro.anoPublicacao),
       capaUrl: this.formLivro.capaUrl?.trim() || null,
-      autores: ids.map(id => ({ id }))
+      autores: this.autoresSelecionados.map(autor => ({ id: autor.id }))
     };
 
     const requisicao = this.isEdicao
@@ -456,20 +411,15 @@ export class LivrosComponent implements OnInit {
     requisicao.subscribe({
       next: () => {
         this.salvando = false;
-
-        if (isPlatformBrowser(this.platformId)) {
-          alert(
-            this.isEdicao
-              ? 'Livro atualizado com sucesso!'
-              : 'Livro cadastrado com sucesso! Estoque inicial de 5 exemplares.'
-          );
-        }
-
-        this.modoFormulario = false;
-        this.autoresSelecionados = [];
-        this.buscaAutor = '';
+        this.mostrarToast(
+          this.isEdicao
+            ? 'Livro atualizado com sucesso.'
+            : 'Livro cadastrado com sucesso! Estoque inicial de 5 exemplares.',
+          'sucesso'
+        );
+        this.fecharFormulario();
         this.paginaAtual = 1;
-        this.carregar();
+        this.carregarLivros();
       },
       error: erro => {
         this.salvando = false;
@@ -478,42 +428,152 @@ export class LivrosComponent implements OnInit {
     });
   }
 
-  excluir(id: number): void {
-    const confirmar = isPlatformBrowser(this.platformId)
-      ? confirm('Deseja excluir este livro?')
-      : true;
+  validarFormulario(): boolean {
+    const f = this.formLivro;
+    const erros: Record<string, string> = {};
+    const anoMaximo = new Date().getFullYear() + 1;
+    const ano = Number(f.anoPublicacao);
+    const isbn = this.isbnLimpo(f.isbn);
 
-    if (!confirmar) {
+    if (String(f.titulo || '').trim().length < 2) {
+      erros['titulo'] = 'Informe o título (mínimo de 2 caracteres).';
+    }
+
+    if (!isbn) {
+      erros['isbn'] = 'Informe o ISBN.';
+    } else if (!/^(\d{9}[\dX]|\d{13})$/.test(isbn)) {
+      erros['isbn'] = 'O ISBN deve ter 10 ou 13 dígitos.';
+    } else if (this.isbnDuplicado(isbn)) {
+      erros['isbn'] = 'Já existe um livro cadastrado com este ISBN.';
+    }
+
+    if (!Number.isInteger(ano) || ano < 1450 || ano > anoMaximo) {
+      erros['ano'] = `Informe um ano entre 1450 e ${anoMaximo}.`;
+    }
+
+    if (String(f.capaUrl || '').trim() && !/^https?:\/\//i.test(String(f.capaUrl).trim())) {
+      erros['capaUrl'] = 'Use um endereço iniciado por http:// ou https://.';
+    }
+
+    if (this.autoresSelecionados.length === 0) {
+      erros['autores'] = 'Selecione pelo menos um autor.';
+    }
+
+    this.erros = erros;
+    return Object.keys(erros).length === 0;
+  }
+
+  isbnLimpo(valor: any): string {
+    return String(valor || '').replace(/[\s-]/g, '').toUpperCase();
+  }
+
+  private isbnDuplicado(isbn: string): boolean {
+    return this.todosLivros.some(livro =>
+      this.isbnLimpo(livro.isbn) === isbn && livro.id !== this.formLivro.id
+    );
+  }
+
+  private criarFormularioVazio(): any {
+    return {
+      id: null,
+      titulo: '',
+      isbn: '',
+      anoPublicacao: new Date().getFullYear(),
+      capaUrl: ''
+    };
+  }
+
+  private abrirFormulario(edicao: boolean): void {
+    this.isEdicao = edicao;
+    if (!edicao) {
+      this.autoresSelecionados = [];
+    }
+    this.buscaAutor = '';
+    this.erros = {};
+    this.tentouSalvar = false;
+    this.capaComErro = false;
+    this.salvando = false;
+    this.modoFormulario = true;
+    this.rolarTopo();
+  }
+
+  private fecharFormulario(): void {
+    this.modoFormulario = false;
+    this.autoresSelecionados = [];
+    this.buscaAutor = '';
+    this.erros = {};
+    this.tentouSalvar = false;
+  }
+
+  // =====================================================
+  // EXCLUSÃO
+  // =====================================================
+
+  pedirExclusao(livro: any): void {
+    this.livroParaExcluir = livro;
+  }
+
+  cancelarExclusao(): void {
+    if (!this.excluindo) {
+      this.livroParaExcluir = null;
+    }
+  }
+
+  confirmarExclusao(): void {
+    if (!this.livroParaExcluir || this.excluindo) {
       return;
     }
 
-    this.api.deleteItem('livros', id).subscribe({
-      next: () => {
-        if (isPlatformBrowser(this.platformId)) {
-          alert('Livro excluído com sucesso.');
-        }
+    const livro = this.livroParaExcluir;
+    this.excluindo = true;
 
-        this.paginaAtual = 1;
-        this.carregar();
+    this.api.deleteItem('livros', livro.id).subscribe({
+      next: () => {
+        this.excluindo = false;
+        this.livroParaExcluir = null;
+        this.mostrarToast(`"${livro.titulo}" foi excluído do acervo.`, 'sucesso');
+        this.carregarLivros();
       },
-      error: erro => this.erro('excluir livro', erro)
+      error: erro => {
+        this.excluindo = false;
+        this.livroParaExcluir = null;
+        this.erro('excluir livro', erro);
+      }
     });
   }
 
   // =====================================================
-  // ERROS
+  // FEEDBACK E UTILITÁRIOS
   // =====================================================
+
+  mostrarToast(mensagem: string, tipo: 'sucesso' | 'erro'): void {
+    this.toast = { mensagem, tipo };
+    clearTimeout(this.toastTimer);
+
+    if (isPlatformBrowser(this.platformId)) {
+      this.toastTimer = setTimeout(() => this.toast = null, 4000);
+    }
+  }
+
+  fecharToast(): void {
+    this.toast = null;
+  }
 
   private erro(acao: string, erro: any): void {
     console.error(`Erro ao ${acao}:`, erro);
 
+    this.mostrarToast(
+      erro?.error?.mensagem ||
+      erro?.error?.erro ||
+      erro?.error?.message ||
+      `Não foi possível ${acao}. Verifique a API e a chave de acesso.`,
+      'erro'
+    );
+  }
+
+  private rolarTopo(): void {
     if (isPlatformBrowser(this.platformId)) {
-      alert(
-        erro?.error?.mensagem ||
-        erro?.error?.erro ||
-        erro?.error?.message ||
-        `Não foi possível ${acao}. Verifique a API e a chave de acesso.`
-      );
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 }

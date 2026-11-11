@@ -1,524 +1,454 @@
-<!-- MODO LISTAGEM -->
-<div class="view-container" *ngIf="!modoFormulario">
+<!-- ==================== LISTAGEM ==================== -->
+<div class="page" *ngIf="!modoFormulario">
 
-  <div class="header-flex">
-    <div class="page-title-flex">
-      <div class="title-icon-box">
-        <svg width="28" height="28" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+  <header class="page-header">
+    <div class="page-title">
+      <div class="title-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
       </div>
-
       <div>
-        <h2>Gestão de Livros</h2>
-        <p class="subtitle">Consulte e mantenha o acervo da biblioteca.</p>
+        <h1>Acervo de livros</h1>
+        <p>Gerencie títulos, exemplares e disponibilidade da biblioteca.</p>
       </div>
     </div>
 
-    <button
-      type="button"
-      class="btn-primary btn-add"
-      (click)="novo()">
-      <span class="plus-icon">+</span>
-      Novo Livro
+    <button type="button" class="btn-primary" (click)="novo()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M12 5v14M5 12h14"></path>
+      </svg>
+      Novo livro
     </button>
-  </div>
+  </header>
 
-  <!-- RESUMO DO ESTOQUE -->
-  <div class="stock-dashboard">
+  <!-- ESTATÍSTICAS -->
+  <section class="stats">
 
-    <div class="stock-card">
-      <div class="stock-card-icon stock-icon-total">
-        <svg width="22" height="22" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+    <!-- Informativo -->
+    <div class="stat-card stat-card-info">
+      <span class="stat-icon icon-teal">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
-      </div>
-
+      </span>
       <div>
-        <span>Total de exemplares</span>
-        <strong>{{ totalExemplares }}</strong>
+        <span>Títulos</span>
+        <strong>{{ totalTitulos }}</strong>
       </div>
     </div>
 
-    <div class="stock-card">
-      <div class="stock-card-icon stock-icon-available">
-        <svg width="22" height="22" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+    <!-- Informativo -->
+    <div class="stat-card stat-card-info">
+      <span class="stat-icon icon-gold">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 7l9-4 9 4-9 4-9-4z"></path>
+          <path d="M3 12l9 4 9-4"></path>
+          <path d="M3 17l9 4 9-4"></path>
+        </svg>
+      </span>
+      <div>
+        <span>Exemplares</span>
+        <strong>{{ totalExemplares }}</strong>
+        <small>{{ totalExemplaresEmprestados }} emprestados</small>
+      </div>
+    </div>
+
+    <!-- Filtro -->
+    <button type="button" class="stat-card" [class.ativo]="filtroEstoque === 'disponiveis'"
+      (click)="definirFiltro('disponiveis')">
+      <span class="stat-icon icon-green">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M20 6 9 17l-5-5"></path>
         </svg>
-      </div>
-
+      </span>
       <div>
         <span>Disponíveis</span>
         <strong>{{ totalExemplaresDisponiveis }}</strong>
+        <small>exemplares prontos</small>
       </div>
-    </div>
+    </button>
 
-    <div class="stock-card">
-      <div class="stock-card-icon stock-icon-loaned">
-        <svg width="22" height="22" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 8v4l3 3"></path>
+    <!-- Filtro -->
+    <button type="button" class="stat-card stat-card-alerta" [class.ativo]="filtroEstoque === 'esgotados'"
+      (click)="definirFiltro('esgotados')">
+      <span class="stat-icon icon-red">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10"></circle>
+          <path d="m15 9-6 6M9 9l6 6"></path>
         </svg>
-      </div>
-
+      </span>
       <div>
-        <span>Emprestados</span>
-        <strong>{{ totalExemplaresEmprestados }}</strong>
+        <span>Esgotados</span>
+        <strong>{{ contagem('esgotados') }}</strong>
+        <small>sem exemplar disponível</small>
       </div>
-    </div>
+    </button>
 
-  </div>
+  </section>
 
-  <!-- PESQUISA -->
-  <div class="top-bar-flex">
-
-    <div class="search-input-wrapper">
-      <svg class="search-icon" width="19" height="19"
-        viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2"
-        stroke-linecap="round">
+  <!-- BARRA DE FERRAMENTAS -->
+  <section class="toolbar">
+    <div class="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.75" stroke-linecap="round" aria-hidden="true">
         <circle cx="11" cy="11" r="8"></circle>
         <path d="m21 21-4.35-4.35"></path>
       </svg>
 
-      <input
-        class="search-input"
-        type="text"
-        [(ngModel)]="termoBusca"
-        (ngModelChange)="atualizarPesquisa()"
-        placeholder="Pesquisar por título, ISBN ou autor..."
-      />
+      <input type="text" [(ngModel)]="termoBusca" (ngModelChange)="aoAlterarFiltro()"
+        placeholder="Buscar por título, ISBN, autor ou ID" />
+
+      <button *ngIf="termoBusca" type="button" class="clear-btn"
+        (click)="limparBusca()" aria-label="Limpar busca">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M18 6 6 18M6 6l12 12"></path>
+        </svg>
+      </button>
     </div>
 
-    <span class="results-count">
-      {{ totalRegistros }} registro(s) encontrado(s)
-    </span>
+    <div class="chips">
+      <button type="button" class="chip" *ngFor="let f of filtros"
+        [class.ativo]="filtroEstoque === f.valor" (click)="definirFiltro(f.valor)">
+        {{ f.rotulo }}
+        <span>{{ contagem(f.valor) }}</span>
+      </button>
+    </div>
 
-  </div>
+    <select class="sort" [(ngModel)]="ordenacao" (ngModelChange)="aoAlterarFiltro()">
+      <option value="titulo">Título (A–Z)</option>
+      <option value="ano">Ano (mais recente)</option>
+      <option value="disponiveis">Mais disponíveis</option>
+    </select>
+  </section>
 
   <!-- TABELA -->
   <div class="table-card">
-
-    <div class="table-responsive">
-
+    <div class="table-wrap">
       <table>
-
         <thead>
           <tr>
-            <th class="id-column">ID</th>
-            <th>CAPA</th>
-            <th>TÍTULO</th>
+            <th>Livro</th>
             <th>ISBN</th>
-            <th>ANO</th>
-            <th>ESTOQUE</th>
-            <th>AUTORES</th>
-            <th class="actions-header">AÇÕES</th>
+            <th>Ano</th>
+            <th>Autores</th>
+            <th>Estoque</th>
+            <th class="col-acoes">Ações</th>
           </tr>
         </thead>
 
         <tbody>
+          <!-- Skeleton -->
+          <ng-container *ngIf="carregando">
+            <tr *ngFor="let _ of skeletonLinhas" class="skeleton-row">
+              <td colspan="6"><div class="skeleton"></div></td>
+            </tr>
+          </ng-container>
 
-          <tr *ngFor="let livro of livrosPaginados">
+          <!-- Dados -->
+          <ng-container *ngIf="!carregando">
+            <tr *ngFor="let livro of livrosPaginados" class="linha">
+              <td>
+                <div class="livro-cell">
+                  <img class="capa" [src]="obterCapa(livro)" [alt]="'Capa de ' + livro.titulo"
+                    loading="lazy" (error)="imagemIndisponivel($event)" />
+                  <div>
+                    <strong class="titulo">{{ livro.titulo }}</strong>
+                    <small>ID {{ livro.id }}</small>
+                  </div>
+                </div>
+              </td>
 
-            <td class="col-id">
-              {{ livro.id }}
-            </td>
+              <td><span class="isbn">{{ livro.isbn }}</span></td>
 
-            <td class="capa-cell">
-              <img
-                [src]="obterCapa(livro)"
-                [alt]="'Capa de ' + livro.titulo"
-                class="capa-livro"
-                (error)="imagemIndisponivel($event)"
-              />
-            </td>
+              <td>{{ livro.anoPublicacao }}</td>
 
-            <td class="book-title">
-              {{ livro.titulo }}
-            </td>
+              <td class="autores">{{ nomeAutores(livro) }}</td>
 
-            <td>
-              <span class="isbn-text">
-                {{ livro.isbn }}
-              </span>
-            </td>
-
-            <td>
-              {{ livro.anoPublicacao }}
-            </td>
-
-            <!-- ESTOQUE -->
-            <td class="stock-cell">
-
-              <div class="stock-details">
-
-                <span
-                  class="stock-status"
-                  [class.stock-status-available]="livroDisponivel(livro)"
-                  [class.stock-status-empty]="!livroDisponivel(livro)">
-
-                  {{ obterStatusEstoque(livro) }}
-
+              <td class="estoque">
+                <span class="pill" [class.pill-ok]="livroDisponivel(livro)"
+                  [class.pill-esgotado]="!livroDisponivel(livro)">
+                  <i></i>{{ livroDisponivel(livro) ? 'Disponível' : 'Esgotado' }}
                 </span>
 
-                <div class="stock-numbers">
-
-                  <span class="stock-available-number">
-                    {{ obterQuantidadeDisponivel(livro) }}
-                    disponíveis
-                  </span>
-
-                  <span class="stock-total-number">
-                    {{ obterQuantidadeEmprestada(livro) }}
-                    emprestados
-                  </span>
-
+                <div class="barra" [attr.title]="percentualDisponivel(livro) + '% disponível'">
+                  <div class="barra-fill" [style.width.%]="percentualDisponivel(livro)"></div>
                 </div>
 
-                <small class="stock-total">
-                  Total: {{ obterQuantidadeTotal(livro) }} exemplares
+                <small>
+                  {{ obterQuantidadeDisponivel(livro) }} de {{ obterQuantidadeTotal(livro) }}
+                  disponíveis · {{ obterQuantidadeEmprestada(livro) }} emprestados
                 </small>
+              </td>
 
-              </div>
+              <td class="col-acoes">
+                <div class="acoes">
+                  <button type="button" class="icon-btn" title="Editar" (click)="editar(livro)"
+                    aria-label="Editar livro">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 20h9"></path>
+                      <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
+                    </svg>
+                  </button>
 
-            </td>
+                  <button type="button" class="icon-btn icon-btn-danger" title="Excluir"
+                    (click)="pedirExclusao(livro)" aria-label="Excluir livro">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M3 6h18"></path>
+                      <path d="M8 6V4h8v2"></path>
+                      <path d="m19 6-1 14H6L5 6"></path>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
 
-            <td>
-              {{ nomeAutores(livro) }}
-            </td>
-
-            <!-- AÇÕES -->
-            <td class="actions-cell">
-
-              <button
-                type="button"
-                class="btn-edit"
-                (click)="editar(livro)">
-
-                <svg width="14" height="14" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"></path>
-                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
-                </svg>
-
-                Editar
-
-              </button>
-
-              <button
-                type="button"
-                class="btn-delete"
-                (click)="excluir(livro.id)">
-
-                <svg width="14" height="14" viewBox="0 0 24 24"
-                  fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M3 6h18"></path>
-                  <path d="M8 6V4h8v2"></path>
-                  <path d="m19 6-1 14H6L5 6"></path>
-                  <path d="M10 11v5M14 11v5"></path>
-                </svg>
-
-                Excluir
-
-              </button>
-
-            </td>
-
-          </tr>
-
-          <tr *ngIf="totalRegistros === 0">
-            <td colspan="8" class="empty-row">
-              Nenhum livro encontrado.
-            </td>
-          </tr>
-
+            <tr *ngIf="livrosPaginados.length === 0">
+              <td colspan="6">
+                <div class="vazio">
+                  <strong>Nenhum livro encontrado</strong>
+                  <p>Ajuste a busca ou os filtros para ver outros resultados.</p>
+                  <button type="button" class="btn-ghost" (click)="limparFiltros()">
+                    Limpar filtros
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
-
       </table>
-
     </div>
 
-    <!-- RODAPÉ E PAGINAÇÃO -->
-    <div class="table-footer">
-
-      <span class="footer-info">
-        Mostrando {{ primeiroItem }}–{{ ultimoItem }}
-        de {{ totalRegistros }} registros
+    <!-- RODAPÉ -->
+    <footer class="table-footer">
+      <span>
+        Mostrando {{ primeiroItem }}–{{ ultimoItem }} de {{ listaFiltrada.length }} registros
       </span>
 
-      <div class="paginacao" *ngIf="totalPaginas > 1">
+      <div class="paginacao">
+        <label class="por-pagina">
+          Por página
+          <select (change)="alterarItensPorPagina($any($event.target).value)">
+            <option *ngFor="let op of opcoesPorPagina" [value]="op" [selected]="op === itensPorPagina">
+              {{ op }}
+            </option>
+          </select>
+        </label>
 
-        <button
-          type="button"
-          class="pagina-btn"
-          [disabled]="paginaAtual === 1"
-          (click)="irParaPagina(paginaAtual - 1)">
-          Anterior
-        </button>
+        <nav class="paginas" *ngIf="totalPaginas > 1">
+          <button type="button" class="pag-btn" [disabled]="paginaAtual === 1"
+            (click)="irParaPagina(paginaAtual - 1)" aria-label="Página anterior">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m15 18-6-6 6-6"></path>
+            </svg>
+          </button>
 
-        <button
-          type="button"
-          *ngFor="let pagina of paginas"
-          class="pagina-btn"
-          [class.ativa]="paginaAtual === pagina"
-          (click)="irParaPagina(pagina)">
-          {{ pagina }}
-        </button>
+          <button type="button" class="pag-btn" *ngFor="let p of paginasVisiveis"
+            [class.ativa]="p === paginaAtual" (click)="irParaPagina(p)">
+            {{ p }}
+          </button>
 
-        <button
-          type="button"
-          class="pagina-btn"
-          [disabled]="paginaAtual === totalPaginas"
-          (click)="irParaPagina(paginaAtual + 1)">
-          Próxima
-        </button>
-
+          <button type="button" class="pag-btn" [disabled]="paginaAtual === totalPaginas"
+            (click)="irParaPagina(paginaAtual + 1)" aria-label="Próxima página">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+          </button>
+        </nav>
       </div>
-
-    </div>
-
+    </footer>
   </div>
-
 </div>
 
 
-<!-- MODO FORMULÁRIO -->
-<div class="wizard-container" *ngIf="modoFormulario">
+<!-- ==================== FORMULÁRIO ==================== -->
+<div class="page" *ngIf="modoFormulario">
 
-  <div class="header-flex">
-
-    <div class="page-title-flex">
-
-      <div class="title-icon-box">
-        <svg width="28" height="28" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
+  <header class="page-header">
+    <div class="page-title">
+      <div class="title-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M12 20h9"></path>
           <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"></path>
         </svg>
       </div>
-
       <div>
-        <h2>{{ isEdicao ? 'Editar Livro' : 'Novo Livro' }}</h2>
-        <p class="subtitle">
-          Informe os dados bibliográficos e vincule os autores.
-        </p>
+        <h1>{{ isEdicao ? 'Editar livro' : 'Novo livro' }}</h1>
+        <p>Informe os dados bibliográficos e vincule os autores.</p>
       </div>
-
     </div>
 
-    <button
-      type="button"
-      class="btn-secondary"
-      [disabled]="salvando"
-      (click)="cancelar()">
-      Voltar para a Lista
+    <button type="button" class="btn-ghost" [disabled]="salvando" (click)="cancelar()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 12H5M12 19l-7-7 7-7"></path>
+      </svg>
+      Voltar para a lista
     </button>
+  </header>
 
-  </div>
+  <div class="form-layout">
 
-  <div class="wizard-card">
+    <!-- COLUNA PRINCIPAL -->
+    <section class="card">
+      <h2 class="card-titulo">Informações do livro</h2>
 
-    <div class="form-section-title">
-      <h3>Informações do Livro</h3>
-      <p>
-        Preencha os campos abaixo para cadastrar o livro no acervo.
-      </p>
-    </div>
-
-    <div class="form-step">
-
-      <div class="form-group">
-
-        <label for="titulo">
-          Título do livro <span>*</span>
-        </label>
-
-        <input
-          id="titulo"
-          type="text"
-          [(ngModel)]="formLivro.titulo"
-          placeholder="Ex: Dom Casmurro"
-        />
-
+      <div class="campo" [class.invalido]="erros['titulo']">
+        <label for="titulo">Título <span>*</span></label>
+        <input id="titulo" type="text" [(ngModel)]="formLivro.titulo"
+          (ngModelChange)="tentouSalvar && validarFormulario()" placeholder="Ex: Dom Casmurro" />
+        <small class="erro-campo" *ngIf="erros['titulo']">{{ erros['titulo'] }}</small>
       </div>
 
-      <div class="form-row">
-
-        <div class="form-group">
-
-          <label for="isbn">
-            ISBN <span>*</span>
-          </label>
-
-          <input
-            id="isbn"
-            type="text"
-            [(ngModel)]="formLivro.isbn"
-            placeholder="Ex: 978-8535902778"
-          />
-
+      <div class="campo-linha">
+        <div class="campo" [class.invalido]="erros['isbn']">
+          <label for="isbn">ISBN <span>*</span></label>
+          <input id="isbn" type="text" [(ngModel)]="formLivro.isbn"
+            (ngModelChange)="tentouSalvar && validarFormulario()" placeholder="Ex: 978-8535902778" />
+          <small class="erro-campo" *ngIf="erros['isbn']">{{ erros['isbn'] }}</small>
         </div>
 
-        <div class="form-group">
-
-          <label for="ano">
-            Ano de publicação <span>*</span>
-          </label>
-
-          <input
-            id="ano"
-            type="number"
-            [(ngModel)]="formLivro.anoPublicacao"
-            placeholder="Ex: 1899"
-          />
-
+        <div class="campo" [class.invalido]="erros['ano']">
+          <label for="ano">Ano de publicação <span>*</span></label>
+          <input id="ano" type="number" [(ngModel)]="formLivro.anoPublicacao"
+            (ngModelChange)="tentouSalvar && validarFormulario()" placeholder="Ex: 1899" />
+          <small class="erro-campo" *ngIf="erros['ano']">{{ erros['ano'] }}</small>
         </div>
-
       </div>
 
-      <!-- CAPA -->
-      <div class="form-group">
-
-        <label for="capaUrl">
-          URL da capa do livro
-        </label>
-
-        <input
-          id="capaUrl"
-          type="url"
-          [(ngModel)]="formLivro.capaUrl"
-          (blur)="validarUrlCapa()"
-          placeholder="https://exemplo.com/imagem-do-livro.jpg"
-        />
-
-        <small>
-          Cole o endereço público da imagem. A prévia aparecerá abaixo.
+      <div class="campo" [class.invalido]="erros['capaUrl']">
+        <label for="capaUrl">URL da capa</label>
+        <input id="capaUrl" type="url" [(ngModel)]="formLivro.capaUrl"
+          (ngModelChange)="capaComErro = false; tentouSalvar && validarFormulario()"
+          placeholder="https://exemplo.com/capa.jpg" />
+        <small class="erro-campo" *ngIf="erros['capaUrl']">{{ erros['capaUrl'] }}</small>
+        <small class="ajuda" *ngIf="!erros['capaUrl']">
+          Opcional. Se vazio, a capa padrão do acervo será usada.
         </small>
-
-        <div class="capa-preview" *ngIf="formLivro.capaUrl">
-
-          <img
-            [src]="formLivro.capaUrl"
-            alt="Prévia da capa do livro"
-            (error)="$any($event.target).style.display='none'"
-            (load)="$any($event.target).style.display='block'"
-          />
-
-        </div>
-
       </div>
 
-      <!-- AUTORES -->
-      <div class="form-group">
+      <div class="campo" [class.invalido]="erros['autores']">
+        <label for="buscaAutor">Autores <span>*</span></label>
 
-        <label for="buscaAutor">
-          Pesquisar autores <span>*</span>
-        </label>
-
-        <div class="author-search">
-
-          <input
-            id="buscaAutor"
-            type="text"
-            [(ngModel)]="buscaAutor"
+        <div class="autor-busca">
+          <input id="buscaAutor" type="text" [(ngModel)]="buscaAutor" autocomplete="off"
             placeholder="Digite o nome do autor..."
-            autocomplete="off"
-          />
+            (keydown.enter)="$event.preventDefault(); autoresSugeridos[0] && selecionarAutor(autoresSugeridos[0])" />
 
-          <div
-            class="author-suggestions"
-            *ngIf="autoresSugeridos.length > 0">
-
-            <button
-              type="button"
-              class="author-suggestion"
-              *ngFor="let autor of autoresSugeridos"
+          <div class="sugestoes" *ngIf="autoresSugeridos.length > 0">
+            <button type="button" class="sugestao" *ngFor="let autor of autoresSugeridos"
               (click)="selecionarAutor(autor)">
-
               {{ autor.nome }}
-
             </button>
-
           </div>
 
+          <div class="sugestoes" *ngIf="buscaAutor.trim() && autoresSugeridos.length === 0">
+            <span class="sem-resultado">Nenhum autor encontrado</span>
+          </div>
         </div>
 
-        <div
-          class="selected-authors"
-          *ngIf="autoresSelecionados.length > 0">
-
-          <span
-            class="author-chip"
-            *ngFor="let autor of autoresSelecionados">
-
+        <div class="chips-autor" *ngIf="autoresSelecionados.length > 0">
+          <span class="chip-autor" *ngFor="let autor of autoresSelecionados">
             {{ autor.nome }}
-
-            <button
-              type="button"
-              aria-label="Remover autor"
-              (click)="removerAutor(autor.id)">
-              ×
+            <button type="button" (click)="removerAutor(autor.id)" aria-label="Remover autor">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+                <path d="M18 6 6 18M6 6l12 12"></path>
+              </svg>
             </button>
-
           </span>
-
         </div>
 
-        <small
-          *ngIf="autores.length === 0"
-          class="warning-text">
+        <small class="erro-campo" *ngIf="erros['autores']">{{ erros['autores'] }}</small>
+        <small class="warning" *ngIf="autores.length === 0">
           Cadastre um autor antes de cadastrar o livro.
         </small>
-
-        <small
-          *ngIf="autores.length > 0 && autoresSelecionados.length === 0">
-          Digite para pesquisar e selecione um ou mais autores sugeridos.
-        </small>
-
       </div>
 
-      <!-- AÇÕES -->
-      <div class="form-actions">
-
-        <button
-          type="button"
-          class="btn-secondary"
-          [disabled]="salvando"
-          (click)="cancelar()">
+      <div class="form-acoes">
+        <button type="button" class="btn-ghost" [disabled]="salvando" (click)="cancelar()">
           Cancelar
         </button>
-
-        <button
-          type="button"
-          class="btn-success"
-          [disabled]="salvando"
-          (click)="salvar()">
-
-          {{
-            salvando
-              ? 'Salvando...'
-              : (isEdicao ? 'Salvar Alterações' : 'Concluir Cadastro')
-          }}
-
+        <button type="button" class="btn-primary" [disabled]="salvando" (click)="salvar()">
+          <span class="spinner" *ngIf="salvando"></span>
+          {{ salvando ? 'Salvando...' : (isEdicao ? 'Salvar alterações' : 'Concluir cadastro') }}
         </button>
+      </div>
+    </section>
 
+    <!-- PRÉVIA AO VIVO -->
+    <aside class="card preview">
+      <h2 class="card-titulo">Prévia</h2>
+
+      <div class="capa-preview">
+        <img *ngIf="formLivro.capaUrl && !capaComErro" [src]="formLivro.capaUrl"
+          alt="Prévia da capa" (error)="capaComErro = true" />
+        <div class="capa-vazia" *ngIf="!formLivro.capaUrl || capaComErro">
+          <span>{{ capaComErro ? 'Não foi possível carregar a imagem' : 'Sem capa informada' }}</span>
+        </div>
       </div>
 
-    </div>
+      <strong class="preview-titulo">{{ formLivro.titulo || 'Título do livro' }}</strong>
+      <span class="preview-linha">{{ formLivro.anoPublicacao || '—' }}</span>
+      <span class="preview-linha">{{ isbnLimpo(formLivro.isbn) || 'ISBN' }}</span>
+
+      <div class="tags" *ngIf="autoresSelecionados.length > 0">
+        <span class="tag" *ngFor="let autor of autoresSelecionados">{{ autor.nome }}</span>
+      </div>
+    </aside>
 
   </div>
+</div>
 
+
+<!-- ==================== CONFIRMAÇÃO DE EXCLUSÃO ==================== -->
+<div class="modal-backdrop" *ngIf="livroParaExcluir" (click)="cancelarExclusao()">
+  <div class="modal" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <div class="modal-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <path d="M12 9v4M12 17h.01"></path>
+      </svg>
+    </div>
+    <h3>Excluir livro?</h3>
+    <p>
+      <strong>"{{ livroParaExcluir.titulo }}"</strong> será removido do acervo.
+      Esta ação não pode ser desfeita.
+    </p>
+    <div class="modal-acoes">
+      <button type="button" class="btn-ghost" [disabled]="excluindo" (click)="cancelarExclusao()">
+        Cancelar
+      </button>
+      <button type="button" class="btn-danger" [disabled]="excluindo" (click)="confirmarExclusao()">
+        {{ excluindo ? 'Excluindo...' : 'Excluir' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ==================== TOAST ==================== -->
+<div class="toast" *ngIf="toast" [class.toast-erro]="toast.tipo === 'erro'" role="status">
+  <span>{{ toast.mensagem }}</span>
+  <button type="button" (click)="fecharToast()" aria-label="Fechar">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12"></path>
+    </svg>
+  </button>
 </div>
