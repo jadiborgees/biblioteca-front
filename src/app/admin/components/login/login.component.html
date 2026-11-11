@@ -1,218 +1,187 @@
 <div class="login-container">
 
-  <div class="login-card">
+  <!-- LADO ESQUERDO: estante interativa -->
+  <aside class="hero">
 
-    <!-- CABEÇALHO -->
-    <div class="login-header">
+    <div class="marca">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
+        <path d="M8 7h8"/>
+        <path d="M8 11h8"/>
+      </svg>
+      <span>Biblioteca Comunitária</span>
+    </div>
 
-      <div class="login-logo">
-        <svg
-          width="34"
-          height="34"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="1.8"
-          stroke-linecap="round"
-          stroke-linejoin="round">
+    <div class="hero-centro">
 
+      <h2>Cuide do acervo da sua comunidade</h2>
+
+      <div class="estante" aria-hidden="true">
+        <div class="prateleira" *ngFor="let prateleira of estantes; let p = index">
+          <span
+            class="livro"
+            *ngFor="let livro of prateleira; let j = index"
+            [class.fora]="selecionado?.p === p && selecionado?.j === j"
+            [style.--h]="livro.h + 'px'"
+            [style.--w]="livro.w + 'px'"
+            [style.--c]="livro.c"
+            [style.--n]="j + p * 3"
+            (click)="selecionarLivro(p, j)">
+          </span>
+        </div>
+      </div>
+
+      <div class="frase-bloco" aria-live="polite">
+        <p class="frase" *ngFor="let f of [frases[fraseAtual]]">{{ f }}</p>
+        <p class="dica">Toque em um livro da estante</p>
+      </div>
+
+    </div>
+
+  </aside>
+
+  <!-- LADO DIREITO: formulário -->
+  <main class="painel">
+
+    <div class="login-card">
+
+      <div class="marca-mobile">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/>
           <path d="M8 7h8"/>
           <path d="M8 11h8"/>
-
         </svg>
+        <span>Biblioteca Comunitária</span>
       </div>
 
-      <h1>Biblioteca Admin</h1>
+      <div class="login-header">
+        <h1>Bem-vindo de volta</h1>
+        <p>Entre para gerenciar o acervo e os empréstimos.</p>
+      </div>
 
-      <p>Acesse o painel administrativo</p>
+      <form (ngSubmit)="entrar()" #loginForm="ngForm" [class.tremer]="tremer">
+
+        <!-- E-MAIL -->
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" width="19" height="19" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                 stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="14" rx="2"/>
+              <path d="m3 7 9 6 9-6"/>
+            </svg>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              [(ngModel)]="email"
+              placeholder="voce@biblioteca.com"
+              autocomplete="username"
+              required
+            />
+          </div>
+        </div>
+
+        <!-- SENHA -->
+        <div class="form-group">
+          <label for="senha">Senha</label>
+          <div class="input-wrapper">
+            <svg class="input-icon" width="19" height="19" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                 stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="11" rx="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <input
+              [type]="mostrarSenha ? 'text' : 'password'"
+              id="senha"
+              name="senha"
+              [(ngModel)]="senha"
+              placeholder="Digite sua senha"
+              autocomplete="current-password"
+              (keydown)="verificarCapsLock($event)"
+              (keyup)="verificarCapsLock($event)"
+              (blur)="capsLockAtivo = false"
+              required
+            />
+
+            <button
+              type="button"
+              class="toggle-password"
+              (click)="alternarVisibilidadeSenha()"
+              [attr.aria-label]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
+              [attr.title]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'">
+
+              <svg *ngIf="!mostrarSenha" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+
+              <svg *ngIf="mostrarSenha" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                   stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                   stroke-linejoin="round" aria-hidden="true">
+                <path d="m3 3 18 18"/>
+                <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
+                <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a14.8 14.8 0 0 1-3.1 3.9"/>
+                <path d="M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 4-.8"/>
+              </svg>
+
+            </button>
+          </div>
+
+          <p class="aviso" *ngIf="capsLockAtivo">O Caps Lock está ligado.</p>
+        </div>
+
+        <!-- LEMBRAR E-MAIL -->
+        <label class="check">
+          <input type="checkbox" name="lembrar" [(ngModel)]="lembrarMe" />
+          <span class="caixa" aria-hidden="true">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m5 12 5 5 9-10"/>
+            </svg>
+          </span>
+          Lembrar meu e-mail neste computador
+        </label>
+
+        <!-- ERRO -->
+        <div class="erro" role="alert" *ngIf="erro">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4"/>
+            <path d="M12 16h.01"/>
+          </svg>
+          {{ erro }}
+        </div>
+
+        <!-- BOTÃO ENTRAR -->
+        <button
+          type="submit"
+          class="btn-login"
+          [disabled]="carregando || !email || !senha">
+
+          <span *ngIf="!carregando">Entrar</span>
+
+          <span *ngIf="carregando" class="loading-content">
+            <span class="spinner"></span>
+            Entrando...
+          </span>
+        </button>
+
+      </form>
+
+      <p class="login-footer">Painel administrativo da Biblioteca Comunitária</p>
 
     </div>
 
-    <!-- FORMULÁRIO -->
-    <form (ngSubmit)="entrar()" #loginForm="ngForm">
-
-      <!-- E-MAIL -->
-      <div class="form-group">
-
-        <label for="email">E-mail</label>
-
-        <div class="input-wrapper">
-
-          <svg
-            class="input-icon"
-            width="19"
-            height="19"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round">
-
-            <rect x="3" y="5" width="18" height="14" rx="2"/>
-            <path d="m3 7 9 6 9-6"/>
-
-          </svg>
-
-          <input
-            type="email"
-            id="email"
-            name="email"
-            [(ngModel)]="email"
-            placeholder="Digite seu e-mail"
-            autocomplete="username"
-            required
-          />
-
-        </div>
-
-      </div>
-
-      <!-- SENHA -->
-      <div class="form-group">
-
-        <label for="senha">Senha</label>
-
-        <div class="input-wrapper">
-
-          <svg
-            class="input-icon"
-            width="19"
-            height="19"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-            stroke-linecap="round"
-            stroke-linejoin="round">
-
-            <rect x="3" y="11" width="18" height="11" rx="2"/>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-
-          </svg>
-
-          <input
-            [type]="mostrarSenha ? 'text' : 'password'"
-            id="senha"
-            name="senha"
-            [(ngModel)]="senha"
-            placeholder="Digite sua senha"
-            autocomplete="current-password"
-            required
-          />
-
-          <!-- BOTÃO MOSTRAR/OCULTAR SENHA -->
-          <button
-            type="button"
-            class="toggle-password"
-            (click)="alternarVisibilidadeSenha()"
-            [attr.aria-label]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'"
-            [attr.title]="mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'">
-
-            <!-- OLHO ABERTO -->
-            <svg
-              *ngIf="!mostrarSenha"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round">
-
-              <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7Z"/>
-              <circle cx="12" cy="12" r="3"/>
-
-            </svg>
-
-            <!-- OLHO FECHADO -->
-            <svg
-              *ngIf="mostrarSenha"
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.8"
-              stroke-linecap="round"
-              stroke-linejoin="round">
-
-              <path d="m3 3 18 18"/>
-              <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/>
-              <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a14.8 14.8 0 0 1-3.1 3.9"/>
-              <path d="M6.6 6.6C3.7 8.5 2 12 2 12s3.6 7 10 7a10.7 10.7 0 0 0 4-.8"/>
-
-            </svg>
-
-          </button>
-
-        </div>
-
-      </div>
-
-      <!-- ERRO -->
-      <div class="erro" *ngIf="erro">
-
-        <svg
-          width="17"
-          height="17"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round">
-
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 8v4"/>
-          <path d="M12 16h.01"/>
-
-        </svg>
-
-        {{ erro }}
-
-      </div>
-
-      <!-- BOTÃO ENTRAR -->
-      <button
-        type="submit"
-        class="btn-login"
-        [disabled]="carregando || !email || !senha">
-
-        <span *ngIf="!carregando">Entrar</span>
-
-        <span *ngIf="carregando" class="loading-content">
-          <span class="spinner"></span>
-          Entrando...
-        </span>
-
-        <svg
-          *ngIf="!carregando"
-          width="19"
-          height="19"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round">
-
-          <path d="M5 12h14"/>
-          <path d="m12 5 7 7-7 7"/>
-
-        </svg>
-
-      </button>
-
-    </form>
-
-    <div class="login-footer">
-      Biblioteca Comunitária · Painel Administrativo
-    </div>
-
-  </div>
+  </main>
 
 </div>
