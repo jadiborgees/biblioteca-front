@@ -6,6 +6,8 @@ import { Observable, tap } from 'rxjs';
 
 const API_URL = 'https://biblioteca-api-10lf.onrender.com';
 
+export type NivelAcesso = 'ADMIN' | 'OPERADOR';
+
 export interface LoginRequest {
   email: string;
   senha: string;
@@ -14,14 +16,13 @@ export interface LoginRequest {
 export interface LoginResponse {
   token: string;
   email: string;
-  nivelAcesso: string;
+  nivelAcesso: NivelAcesso;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-
   private platformId = inject(PLATFORM_ID);
 
   constructor(private http: HttpClient) {}
@@ -37,9 +38,13 @@ export class AuthService {
     ).pipe(
       tap(resposta => {
         if (this.navegadorDisponivel()) {
+          const nivel = String(
+            resposta.nivelAcesso ?? ''
+          ).toUpperCase();
+
           sessionStorage.setItem('admin_token', resposta.token);
           sessionStorage.setItem('admin_email', resposta.email);
-          sessionStorage.setItem('admin_nivel', resposta.nivelAcesso);
+          sessionStorage.setItem('admin_nivel', nivel);
         }
       })
     );
@@ -54,10 +59,37 @@ export class AuthService {
   }
 
   estaAutenticado(): boolean {
+    return this.navegadorDisponivel() &&
+      !!sessionStorage.getItem('admin_token');
+  }
+
+  obterNivelAcesso(): NivelAcesso | null {
     if (!this.navegadorDisponivel()) {
-      return false;
+      return null;
     }
 
-    return !!sessionStorage.getItem('admin_token');
+    const nivel = sessionStorage
+      .getItem('admin_nivel')
+      ?.toUpperCase();
+
+    return nivel === 'ADMIN' || nivel === 'OPERADOR'
+      ? nivel
+      : null;
+  }
+
+  obterEmail(): string {
+    if (!this.navegadorDisponivel()) {
+      return '';
+    }
+
+    return sessionStorage.getItem('admin_email') ?? '';
+  }
+
+  ehAdmin(): boolean {
+    return this.obterNivelAcesso() === 'ADMIN';
+  }
+
+  ehOperador(): boolean {
+    return this.obterNivelAcesso() === 'OPERADOR';
   }
 }

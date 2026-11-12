@@ -1,4 +1,8 @@
-/* RESET GLOBAL */
+
+/* ==========================================
+   RESET GLOBAL
+========================================== */
+
 * {
   margin: 0;
   padding: 0;
@@ -14,7 +18,10 @@ body {
   color: #0d2b33;
 }
 
-/* CONTAINER ADMINISTRATIVO */
+/* ==========================================
+   CONTAINER PRINCIPAL
+========================================== */
+
 .admin-container {
   display: flex;
   width: 100%;
@@ -24,164 +31,358 @@ body {
   background: #f5f7f6;
 }
 
-/* =========================================================
-   BARRA LATERAL
-   Mesmo teal profundo do painel do login
-   ========================================================= */
-nav {
-  width: 245px;
-  min-width: 245px;
+/* ==========================================
+   SIDEBAR
+========================================== */
+
+.sidebar {
+  width: 260px;
+  min-width: 260px;
   height: 100%;
-  padding: 24px 14px 20px;
+  padding: 25px 16px 18px;
+
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+
   position: relative;
   z-index: 10;
+
   color: #ffffff;
-  background: linear-gradient(180deg, #0f3d48 0%, #0b2f38 45%, #082429 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.04);
+
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(41, 113, 119, 0.25),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      #103d46 0%,
+      #0b3039 55%,
+      #08262d 100%
+    );
+
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* LOGO */
-nav h2 {
+/* ==========================================
+   IDENTIDADE VISUAL
+========================================== */
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 0 7px 23px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.brand-icon {
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  color: #f6bd3d;
+
+  background: rgba(246, 189, 61, 0.14);
+  border: 1px solid rgba(246, 189, 61, 0.16);
+}
+
+.brand-icon svg {
+  width: 23px;
+  height: 23px;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-text strong {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+}
+
+.brand-text span {
+  color: #a8c2c7;
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* ==========================================
+   PERFIL DO USUÁRIO
+========================================== */
+
+.profile-card {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin: 0 0 22px;
-  padding: 0 8px 22px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f6b92e;
-  font-size: 1.02rem;
+
+  margin: 22px 0 29px;
+  padding: 12px 10px;
+
+  min-width: 0;
+
+  border-radius: 13px;
+
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.075);
+}
+
+.profile-avatar {
+  width: 39px;
+  height: 39px;
+  min-width: 39px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 11px;
+
+  font-size: 0.85rem;
   font-weight: 800;
-  letter-spacing: -0.01em;
-  line-height: 1.2;
+  letter-spacing: 0.5px;
 }
 
-/* Ícone de livro desenhado em CSS (não precisa mexer no HTML) */
-nav h2::before {
-  content: "";
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-  border-radius: 9px;
-  background-color: rgba(246, 185, 46, 0.14);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f6b92e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E");
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 18px;
+.avatar-admin {
+  color: #f8d47d;
+  background: rgba(246, 189, 61, 0.18);
+  border: 1px solid rgba(246, 189, 61, 0.25);
 }
 
-/* LISTA DE NAVEGAÇÃO */
-nav ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.avatar-operador {
+  color: #a7e0dc;
+  background: rgba(68, 174, 163, 0.18);
+  border: 1px solid rgba(68, 174, 163, 0.25);
+}
+
+.profile-info {
   display: flex;
   flex-direction: column;
   gap: 4px;
+
+  min-width: 0;
+  flex: 1;
 }
 
-nav ul li {
-  margin: 0;
-}
-
-/* LINKS DO MENU */
-nav ul li a {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 11px 14px;
-  border-radius: 10px;
-  color: #b4ccd1;
-  font-size: 0.91rem;
-  font-weight: 500;
-  text-decoration: none;
-  cursor: pointer;
-  border: 1px solid transparent;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-nav ul li a svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-  opacity: 0.75;
-  transition: opacity 0.15s ease, color 0.15s ease;
-}
-
-/* HOVER */
-nav ul li a:hover:not(.active) {
-  background: rgba(255, 255, 255, 0.07);
+.profile-name {
   color: #ffffff;
-}
-
-nav ul li a:hover:not(.active) svg {
-  opacity: 1;
-}
-
-/* PÁGINA ATUAL: fundo suave + marcador âmbar à esquerda */
-nav ul li a.active {
-  background: rgba(246, 185, 46, 0.12);
-  color: #ffffff;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
-nav ul li a.active::before {
-  content: "";
-  position: absolute;
-  left: -14px;
-  top: 50%;
-  width: 4px;
-  height: 22px;
-  border-radius: 0 4px 4px 0;
-  background: #f6b92e;
-  transform: translateY(-50%);
+.profile-email {
+  color: #a9c1c5;
+  font-size: 0.69rem;
+
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-nav ul li a.active svg {
-  color: #f6b92e;
+.profile-status {
+  width: 8px;
+  height: 8px;
+  min-width: 8px;
+
+  border-radius: 50%;
+  background: #4bc49a;
+
+  box-shadow: 0 0 0 3px rgba(75, 196, 154, 0.12);
+}
+
+/* ==========================================
+   MENU
+========================================== */
+
+.menu-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-label {
+  padding: 0 11px;
+  margin-bottom: 12px;
+
+  color: #73979e;
+
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.sidebar ul {
+  list-style: none;
+
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sidebar ul li {
+  width: 100%;
+}
+
+.sidebar ul li a {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 13px;
+
+  min-height: 45px;
+  padding: 0 13px;
+
+  border-radius: 10px;
+  border: 1px solid transparent;
+
+  color: #b6cbd0;
+
+  font-size: 0.87rem;
+  font-weight: 500;
+
+  text-decoration: none;
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sidebar ul li a svg {
+  width: 19px;
+  height: 19px;
+  min-width: 19px;
+
+  opacity: 0.82;
+
+  transition:
+    opacity 0.2s ease,
+    color 0.2s ease;
+}
+
+.sidebar ul li a:hover:not(.active) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar ul li a:hover:not(.active) svg {
   opacity: 1;
 }
 
-/* FOCO DE TECLADO (substitui o contorno preto/branco do navegador) */
-nav a:focus,
-nav button:focus {
+/* ITEM ATIVO */
+
+.sidebar ul li a.active {
+  color: #ffffff;
+
+  font-weight: 700;
+
+  background:
+    linear-gradient(
+      90deg,
+      rgba(246, 189, 61, 0.17),
+      rgba(246, 189, 61, 0.08)
+    );
+
+  border-color: rgba(246, 189, 61, 0.13);
+}
+
+.sidebar ul li a.active::before {
+  content: "";
+
+  position: absolute;
+  left: -17px;
+  top: 50%;
+
+  width: 4px;
+  height: 24px;
+
+  border-radius: 0 5px 5px 0;
+
+  background: #f6bd3d;
+
+  transform: translateY(-50%);
+}
+
+.sidebar ul li a.active svg {
+  color: #f6bd3d;
+  opacity: 1;
+}
+
+/* FOCO DE TECLADO */
+
+.sidebar a:focus,
+.sidebar button:focus {
   outline: none;
 }
 
-nav a:focus-visible,
-nav button:focus-visible {
-  outline: 2px solid #4fb4c3;
-  outline-offset: 2px;
+.sidebar a:focus-visible,
+.sidebar button:focus-visible {
+  outline: 2px solid #62c5d0;
+  outline-offset: 3px;
 }
 
-/* =========================================================
-   BOTÃO SAIR
-   ========================================================= */
-.logout-button {
+/* ==========================================
+   RODAPÉ
+========================================== */
+
+.sidebar-footer {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.footer-divider {
+  height: 1px;
   width: 100%;
+
+  margin-bottom: 17px;
+
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.logout-button {
+  width: 100%;
+  min-height: 44px;
+
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 12px;
-  padding: 11px 14px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  background: transparent;
-  color: #f4a99f;
-  font-family: inherit;
-  font-size: 0.91rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
 
-.logout-button span {
-  font-size: 18px;
-  line-height: 1;
+  padding: 0 13px;
+
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 10px;
+
+  background: rgba(255, 255, 255, 0.025);
+
+  color: #e9a49b;
+
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .logout-button svg {
@@ -191,25 +392,37 @@ nav button:focus-visible {
 }
 
 .logout-button:hover {
-  background: rgba(232, 96, 79, 0.16);
-  border-color: rgba(232, 96, 79, 0.5);
   color: #ffffff;
+  background: rgba(220, 83, 75, 0.15);
+  border-color: rgba(220, 83, 75, 0.35);
 }
 
-/* =========================================================
+.sidebar-version {
+  margin-top: 16px;
+
+  color: #63858c;
+  font-size: 0.65rem;
+  text-align: center;
+  letter-spacing: 0.2px;
+}
+
+/* ==========================================
    CONTEÚDO PRINCIPAL
-   ========================================================= */
+========================================== */
+
 main {
   flex: 1;
   min-width: 0;
   height: 100%;
+
   padding: 0;
+
   background: #f5f7f6;
+
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-/* BARRA DE ROLAGEM */
 main::-webkit-scrollbar {
   width: 8px;
 }
@@ -227,70 +440,101 @@ main::-webkit-scrollbar-thumb:hover {
   background: #9fb2b4;
 }
 
-/* =========================================================
+/* ==========================================
    RESPONSIVIDADE
-   ========================================================= */
+========================================== */
+
 @media (max-width: 768px) {
-  nav {
-    width: 205px;
-    min-width: 205px;
-    padding: 20px 10px 16px;
+  .sidebar {
+    width: 225px;
+    min-width: 225px;
+    padding: 21px 13px 16px;
   }
 
-  nav h2 {
-    font-size: 0.95rem;
+  .brand-text strong {
+    font-size: 0.94rem;
   }
 
-  nav ul li a {
-    font-size: 0.85rem;
-    padding: 11px 10px;
+  .profile-card {
+    gap: 8px;
   }
 
-  nav ul li a.active::before {
-    left: -10px;
+  .sidebar ul li a {
+    font-size: 0.83rem;
+    padding: 0 11px;
   }
 }
 
-/* Menu só com ícones (precisa dos ícones SVG nos links) */
+/* MENU COMPACTO EM CELULARES */
+
 @media (max-width: 480px) {
-  nav {
-    width: 72px;
-    min-width: 72px;
-    padding: 18px 8px 16px;
+  .sidebar {
+    width: 76px;
+    min-width: 76px;
+    padding: 18px 8px 14px;
   }
 
-  nav h2 {
-    font-size: 0;
-    gap: 0;
+  .brand {
     justify-content: center;
-    margin-bottom: 18px;
     padding: 0 0 18px;
   }
 
-  nav ul li a {
+  .brand-icon {
+    width: 39px;
+    height: 39px;
+  }
+
+  .brand-text,
+  .profile-info,
+  .profile-status,
+  .menu-label,
+  .sidebar-version,
+  .sidebar ul li a span,
+  .logout-button span {
+    display: none;
+  }
+
+  .profile-card {
     justify-content: center;
-    padding: 12px 0;
-    font-size: 0;
-    gap: 0;
+    margin: 17px 0 24px;
+    padding: 8px 0;
+
+    border: none;
+    background: transparent;
   }
 
-  nav ul li a svg {
-    width: 20px;
-    height: 20px;
+  .profile-avatar {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
   }
 
-  nav ul li a.active::before {
-    left: -8px;
+  .sidebar ul li a {
+    justify-content: center;
+    padding: 0;
+    min-height: 44px;
+  }
+
+  .sidebar ul li a svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .sidebar ul li a.active::before {
+    left: -9px;
+  }
+
+  .footer-divider {
+    margin-bottom: 12px;
   }
 
   .logout-button {
     justify-content: center;
-    padding: 12px 0;
-    font-size: 0;
-    gap: 0;
+    padding: 0;
   }
 
-  .logout-button span {
-    font-size: 20px;
+  .logout-button svg {
+    width: 19px;
+    height: 19px;
   }
 }
